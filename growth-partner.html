@@ -214,12 +214,9 @@
       animation: livePulse 2s ease-in-out infinite;
     }
 
-    /* Mini avatars in sidebar for voice presence */
     .sidebar-voice-avatars {
       display: flex;
       align-items: center;
-      margin-left: auto;
-      gap: -4px;
     }
 
     .sidebar-voice-av {
@@ -241,7 +238,6 @@
       margin-left: 4px;
     }
 
-    /* Screen share video */
     .screenshare-container {
       width: 100%;
       background: #000;
@@ -271,7 +267,6 @@
       display: flex; align-items: center; gap: 5px;
     }
 
-    /* User bar */
     .user-bar {
       padding: 10px 12px;
       border-top: 1px solid var(--border);
@@ -329,7 +324,6 @@
     }
 
     .icon-btn:hover { background: var(--surface2); color: var(--text); }
-
     .icon-btn svg { width: 16px; height: 16px; }
 
     /* ===== MAIN CONTENT ===== */
@@ -340,7 +334,6 @@
       overflow: hidden;
     }
 
-    /* Channel header */
     .channel-header {
       padding: 0 20px;
       height: 52px;
@@ -369,7 +362,6 @@
 
     .header-actions { margin-left: auto; display: flex; gap: 6px; }
 
-    /* Messages area */
     .messages-area {
       flex: 1;
       overflow-y: auto;
@@ -382,7 +374,6 @@
     .messages-area::-webkit-scrollbar-track { background: transparent; }
     .messages-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    /* Welcome block */
     .channel-welcome {
       padding: 24px 0 20px;
       border-bottom: 1px solid var(--border);
@@ -406,9 +397,7 @@
 
     .welcome-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-    /* Message groups */
     .msg-group { margin-bottom: 2px; }
-
     .msg-group:hover .msg-actions { opacity: 1; }
 
     .msg-row {
@@ -439,15 +428,9 @@
       margin-bottom: 3px;
     }
 
-    .msg-author {
-      font-size: 14px; font-weight: 600; color: var(--text);
-    }
-
+    .msg-author { font-size: 14px; font-weight: 600; color: var(--text); }
     .msg-author.admin-name { color: var(--gold); }
-
-    .msg-time {
-      font-size: 11px; color: var(--muted);
-    }
+    .msg-time { font-size: 11px; color: var(--muted); }
 
     .msg-rank-badge {
       font-size: 10px; font-weight: 600;
@@ -476,9 +459,7 @@
       position: relative;
     }
 
-    .msg-continuation:hover .msg-hover-time {
-      opacity: 1;
-    }
+    .msg-continuation:hover .msg-hover-time { opacity: 1; }
 
     .msg-hover-time {
       position: absolute;
@@ -519,7 +500,6 @@
       display: flex; align-items: center; gap: 5px;
     }
 
-    /* System messages */
     .system-msg {
       text-align: center;
       font-size: 12px;
@@ -532,7 +512,6 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
 
-    /* Date divider */
     .date-divider {
       display: flex; align-items: center; gap: 12px;
       margin: 16px 0;
@@ -544,15 +523,14 @@
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
 
-    /* Pinned message bar */
     .pinned-bar {
       padding: 8px 16px;
       background: rgba(201,168,76,0.06);
       border-bottom: 1px solid rgba(201,168,76,0.15);
-      display: flex; align-items: center; gap: 10px;
+      display: none;
+      align-items: center; gap: 10px;
       font-size: 12px; color: var(--text2);
       cursor: pointer;
-      display: none;
     }
 
     .pinned-bar.visible { display: flex; }
@@ -560,7 +538,6 @@
     .pinned-content { flex: 1; }
     .pinned-label { font-size: 10px; color: var(--gold); font-weight: 600; letter-spacing: 0.5px; }
 
-    /* Message input */
     .input-area {
       padding: 12px 20px 16px;
       flex-shrink: 0;
@@ -622,7 +599,6 @@
     .send-btn:hover { opacity: 0.85; }
     .send-btn svg { width: 16px; height: 16px; }
 
-    /* Cannot post notice */
     .read-only-bar {
       background: var(--surface2);
       border: 1px solid var(--border2);
@@ -707,20 +683,6 @@
     .join-voice-btn:hover { opacity: 0.85; }
     .join-voice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .leave-voice-btn {
-      padding: 11px 20px;
-      background: rgba(224,92,92,0.15);
-      color: var(--error);
-      border: 1px solid rgba(224,92,92,0.3);
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .leave-voice-btn:hover { background: rgba(224,92,92,0.25); }
-
     /* Voice call control bar */
     .call-controls {
       display: flex;
@@ -742,14 +704,13 @@
     .call-btn-circle {
       width: 48px; height: 48px;
       border-radius: 50%;
-      border: none;
+      border: 1px solid var(--border2);
       display: flex; align-items: center; justify-content: center;
       font-size: 18px;
       cursor: pointer;
       transition: all 0.15s;
       background: var(--surface3);
       color: var(--text);
-      border: 1px solid var(--border2);
     }
 
     .call-btn-circle:hover { background: var(--surface2); transform: scale(1.05); }
@@ -764,80 +725,6 @@
       color: var(--muted);
       font-weight: 500;
       letter-spacing: 0.3px;
-    }
-
-    .call-btn-circle.danger + .call-btn-label { color: var(--error); }
-
-    .daily-frame-container {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      background: var(--bg);
-    }
-
-    .daily-frame-container.active { display: flex; }
-
-    .daily-frame-header {
-      padding: 10px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-
-    .daily-frame-header .room-label {
-      font-size: 14px; font-weight: 600; color: var(--text);
-      flex: 1;
-    }
-
-    .daily-frame-header .live-badge {
-      background: rgba(82,196,122,0.15);
-      border: 1px solid rgba(82,196,122,0.3);
-      color: var(--online);
-      font-size: 11px; font-weight: 700;
-      padding: 3px 8px; border-radius: 20px;
-      letter-spacing: 0.5px;
-      display: flex; align-items: center; gap: 5px;
-    }
-
-    .live-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--online);
-      animation: livePulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    #dailyIframe {
-      flex: 1;
-      border: none;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .api-key-notice {
-      background: rgba(201,168,76,0.08);
-      border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 10px;
-      padding: 14px 18px;
-      font-size: 13px;
-      color: var(--text2);
-      line-height: 1.6;
-      max-width: 360px;
-      text-align: left;
-    }
-
-    .api-key-notice strong { color: var(--gold); }
-    .api-key-notice code {
-      background: var(--surface3);
-      padding: 1px 6px; border-radius: 4px;
-      font-size: 12px; color: var(--text);
-      font-family: monospace;
     }
 
     /* ===== RIGHT PANEL ===== */
@@ -1003,19 +890,10 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    .verified-badge {
-      width: 14px; height: 14px; color: #4A9EBF;
-      flex-shrink: 0;
-    }
+    .verified-badge { width: 14px; height: 14px; color: #4A9EBF; flex-shrink: 0; }
+    .card-rank { font-size: 11px; color: var(--gold); font-weight: 500; margin-bottom: 8px; }
 
-    .card-rank {
-      font-size: 11px; color: var(--gold); font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .card-roles {
-      display: flex; gap: 4px; flex-wrap: wrap;
-    }
+    .card-roles { display: flex; gap: 4px; flex-wrap: wrap; }
 
     .role-tag {
       font-size: 10px; font-weight: 500;
@@ -1056,10 +934,7 @@
     .podium-place:nth-child(2) .podium-av { background: linear-gradient(135deg, #8a8a8a, #c0c0c0); }
     .podium-place:nth-child(3) .podium-av { background: linear-gradient(135deg, #7a4e2a, #cd7f32); }
 
-    .podium-crown {
-      position: absolute; top: -14px;
-      font-size: 16px;
-    }
+    .podium-crown { position: absolute; top: -14px; font-size: 16px; }
 
     .podium-name {
       font-size: 13px; font-weight: 600; color: var(--text);
@@ -1109,16 +984,9 @@
     }
 
     .rank-row:hover { border-color: var(--border2); }
+    .rank-row.me { background: var(--gold-glow); border-color: var(--gold-dim); }
 
-    .rank-row.me {
-      background: var(--gold-glow);
-      border-color: var(--gold-dim);
-    }
-
-    .rank-number {
-      font-size: 13px; font-weight: 700; color: var(--muted);
-      width: 22px; text-align: center; flex-shrink: 0;
-    }
+    .rank-number { font-size: 13px; font-weight: 700; color: var(--muted); width: 22px; text-align: center; flex-shrink: 0; }
 
     .rank-av {
       width: 34px; height: 34px;
@@ -1130,18 +998,9 @@
     }
 
     .rank-info { flex: 1; min-width: 0; }
-
-    .rank-name {
-      font-size: 13px; font-weight: 600; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
+    .rank-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .rank-role { font-size: 11px; color: var(--muted); }
-
-    .rank-pts {
-      font-size: 13px; font-weight: 600; color: var(--gold);
-      flex-shrink: 0;
-    }
+    .rank-pts { font-size: 13px; font-weight: 600; color: var(--gold); flex-shrink: 0; }
 
     /* ===== SETTINGS VIEW ===== */
     .settings-sections { max-width: 560px; }
@@ -1181,11 +1040,7 @@
     }
 
     .settings-row-info { flex: 1; }
-
-    .settings-row-label {
-      font-size: 14px; font-weight: 500; color: var(--text);
-    }
-
+    .settings-row-label { font-size: 14px; font-weight: 500; color: var(--text); }
     .settings-row-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
 
     .toggle {
@@ -1236,7 +1091,6 @@
 
     .settings-btn.danger:hover { background: rgba(224,92,92,0.1); }
 
-    /* Profile card in settings */
     .profile-card {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -1264,7 +1118,6 @@
     }
 
     .profile-card-rank { font-size: 12px; color: var(--gold); margin-bottom: 8px; }
-
     .profile-card-roles { display: flex; gap: 6px; flex-wrap: wrap; }
 
     /* ===== MODAL ===== */
@@ -1288,11 +1141,7 @@
       animation: fadeUp 0.25s ease;
     }
 
-    .modal-title {
-      font-size: 18px; font-weight: 600; color: var(--text);
-      margin-bottom: 6px;
-    }
-
+    .modal-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
     .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
 
     .modal-close {
@@ -1302,7 +1151,6 @@
     }
 
     .modal-close:hover { color: var(--text); }
-
     .modal-field { margin-bottom: 14px; }
 
     .modal-label {
@@ -1404,11 +1252,8 @@
     .pp-username { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
     .pp-rank { font-size: 11px; color: var(--gold); margin-bottom: 10px; }
     .pp-bio { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
-
     .pp-roles { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 14px; }
-
     .pp-divider { height: 1px; background: var(--border); margin-bottom: 12px; }
-
     .pp-actions { display: flex; gap: 8px; }
 
     .pp-btn {
@@ -1455,17 +1300,18 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Emoji picker placeholder */
+    @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
     .emoji-picker-popup {
       position: fixed; z-index: 600;
       background: var(--surface);
       border: 1px solid var(--border2);
       border-radius: 12px;
       padding: 12px;
-      display: grid; grid-template-columns: repeat(8, 1fr);
+      display: none;
+      grid-template-columns: repeat(8, 1fr);
       gap: 4px; width: 240px;
       box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-      display: none;
     }
 
     .emoji-picker-popup.open { display: grid; }
@@ -1494,7 +1340,6 @@
 <div id="app">
   <div class="app-body">
 
-    <!-- Sidebar overlay (mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <!-- SIDEBAR -->
@@ -1506,9 +1351,7 @@
         <span class="sidebar-title">Growth Partner</span>
       </div>
 
-      <div class="sidebar-nav" id="sidebarNav">
-        <!-- Channels rendered by JS -->
-      </div>
+      <div class="sidebar-nav" id="sidebarNav"></div>
 
       <div class="user-bar" id="userBar">
         <div class="user-avatar" id="userBarAvatar">
@@ -1529,7 +1372,6 @@
     <!-- MAIN -->
     <div class="main-content" id="mainContent">
 
-      <!-- Channel Header -->
       <div class="channel-header" id="channelHeader">
         <button class="hamburger" onclick="openSidebar()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1547,7 +1389,6 @@
         </div>
       </div>
 
-      <!-- Pinned bar -->
       <div class="pinned-bar" id="pinnedBar">
         <span class="pinned-pin">📌</span>
         <div class="pinned-content">
@@ -1558,9 +1399,7 @@
 
       <!-- CHANNEL CHAT VIEW -->
       <div id="chatView" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-        <div class="messages-area" id="messagesArea">
-          <!-- Messages loaded here -->
-        </div>
+        <div class="messages-area" id="messagesArea"></div>
         <div class="input-area" id="inputArea">
           <div class="input-wrapper" id="inputWrapper">
             <textarea class="msg-input" id="msgInput" placeholder="Message #channel" rows="1" onkeydown="handleInputKey(event)" oninput="autoResize(this)"></textarea>
@@ -1578,7 +1417,6 @@
           </div>
           <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)" multiple>
         </div>
-        <!-- Read-only overlay -->
         <div class="input-area" id="readOnlyBar" style="display:none">
           <div class="read-only-bar">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1595,10 +1433,9 @@
             <div class="voice-room-title" id="voiceRoomTitle">Voice Room 1</div>
             <div class="voice-room-sub" id="voiceRoomSub">Free audio calls · No setup needed</div>
 
-            <!-- Screen share video (shown when active) -->
             <div class="screenshare-container" id="screenshareContainer">
               <video id="screenVideo" autoplay playsinline muted></video>
-              <div class="screenshare-label"><span class="live-dot" style="background:var(--error)"></span><span id="screenshareWho">Sharing screen</span></div>
+              <div class="screenshare-label"><span id="screenshareWho">Sharing screen</span></div>
             </div>
 
             <div class="voice-participants" id="voiceParticipants"></div>
@@ -1648,7 +1485,6 @@
           <div class="view-sub">Manage your account and preferences</div>
           <div class="settings-sections">
 
-            <!-- Profile card -->
             <div class="profile-card">
               <div class="profile-big-av" id="settingsAvatar"></div>
               <div class="profile-card-info">
@@ -1659,7 +1495,6 @@
               <button class="settings-btn" onclick="openEditModal()">Edit Profile</button>
             </div>
 
-            <!-- Account -->
             <div class="settings-card">
               <div class="settings-card-header">Account</div>
               <div class="settings-row">
@@ -1686,7 +1521,6 @@
               </div>
             </div>
 
-            <!-- Appearance -->
             <div class="settings-card">
               <div class="settings-card-header">Appearance</div>
               <div class="settings-row">
@@ -1695,7 +1529,7 @@
                   <div class="settings-row-label">Dark Mode</div>
                   <div class="settings-row-sub">Always on — Growth Partner is a dark app</div>
                 </div>
-                <button class="toggle on" disabled title="Dark mode is permanent"></button>
+                <button class="toggle on" disabled></button>
               </div>
               <div class="settings-row" id="shadowModeRow" style="display:none">
                 <div class="settings-row-icon">👁️</div>
@@ -1707,7 +1541,6 @@
               </div>
             </div>
 
-            <!-- Privacy -->
             <div class="settings-card">
               <div class="settings-card-header">Privacy</div>
               <div class="settings-row">
@@ -1720,7 +1553,6 @@
               </div>
             </div>
 
-            <!-- Notifications -->
             <div class="settings-card">
               <div class="settings-card-header">Notifications</div>
               <div class="settings-row">
@@ -1741,7 +1573,6 @@
               </div>
             </div>
 
-            <!-- Danger zone -->
             <div class="settings-card">
               <div class="settings-card-header">Account Actions</div>
               <div class="settings-row">
@@ -1758,13 +1589,11 @@
         </div>
       </div>
 
-    </div><!-- /main-content -->
+    </div>
 
-    <!-- RIGHT PANEL (members) -->
+    <!-- RIGHT PANEL -->
     <div class="right-panel" id="rightPanel">
-      <div id="membersList">
-        <!-- populated by JS -->
-      </div>
+      <div id="membersList"></div>
     </div>
 
   </div>
@@ -1795,12 +1624,8 @@
   </div>
 </div>
 
-<!-- Emoji Picker -->
-<div class="emoji-picker-popup" id="emojiPicker">
-  <!-- populated by JS -->
-</div>
+<div class="emoji-picker-popup" id="emojiPicker"></div>
 
-<!-- Profile Popup -->
 <div class="profile-popup" id="profilePopup">
   <button class="pp-close" onclick="closeProfilePopup()">×</button>
   <div class="pp-avatar" id="ppAvatar"></div>
@@ -1816,7 +1641,6 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <!-- Firebase -->
@@ -1827,8 +1651,8 @@
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
-    collection, query, where, orderBy, limit, onSnapshot,
-    serverTimestamp, Timestamp
+    collection, query, orderBy, limit, onSnapshot,
+    serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1850,36 +1674,32 @@
   let currentChannel = null;
   let currentView = 'chat';
   let allMembers = [];
-  let dirFilter = 'all';
   let messageUnsubscribe = null;
   let voiceInRoom = false;
   let shadowMode = false;
   let pinnedMessages = {};
 
   // ===== CHANNEL CONFIG =====
-  const RANKS = ['Member', 'Associate', 'Partner', 'Executive', 'Co-Leader', 'Leader', 'Admin'];
-
   const CHANNELS = [
-    // Category, id, label, icon, desc, canPost (ranks array or 'all'), isVoice, adminOnly
-    { cat: 'COMMAND CENTRE', id: 'announcements', label: 'announcements', icon: '📣', desc: 'Official announcements', canPost: ['Admin', 'Shadow'] },
-    { cat: 'COMMAND CENTRE', id: 'the-vision', label: 'the-vision', icon: '🔭', desc: 'Our mission and direction', canPost: ['Admin'] },
-    { cat: 'COMMAND CENTRE', id: 'rules', label: 'rules', icon: '📜', desc: 'Community rules', canPost: ['Admin'] },
-    { cat: 'COMMAND CENTRE', id: 'onboarding', label: 'onboarding', icon: '🚀', desc: 'Getting started', canPost: ['Admin', 'Shadow'] },
-    { cat: 'COMMAND CENTRE', id: 'app-suggestions', label: 'app-suggestions', icon: '💡', desc: 'Share your ideas', canPost: 'all' },
-    { cat: 'COMMAND CENTRE', id: 'moderator-hub', label: 'moderator-hub', icon: '🛡️', desc: 'Admin & Shadow only', canPost: ['Admin', 'Shadow'], hidden: true },
-    { cat: 'OUR SKILLS', id: 'development-ai', label: 'development-ai', icon: '⚙️', desc: 'Dev & AI discussion', canPost: ['Admin', 'Development & AI'] },
-    { cat: 'OUR SKILLS', id: 'design-creative', label: 'design-creative', icon: '🎨', desc: 'Design & creative', canPost: ['Admin', 'Design & Creative'] },
-    { cat: 'OUR SKILLS', id: 'sales-marketing', label: 'sales-marketing', icon: '📈', desc: 'Sales & marketing', canPost: ['Admin', 'Sales & Marketing'] },
-    { cat: 'OUR SKILLS', id: 'writing-content', label: 'writing-content', icon: '✍️', desc: 'Writing & content', canPost: ['Admin', 'Writing & Content'] },
-    { cat: 'OUR SKILLS', id: 'strategy-management', label: 'strategy-management', icon: '🧭', desc: 'Strategy & management', canPost: ['Admin', 'Strategy & Management'] },
-    { cat: 'SEN', id: 'find-a-partner', label: 'find-a-partner', icon: '🤝', desc: 'Looking for collaborators', canPost: 'all' },
-    { cat: 'SEN', id: 'hire-me', label: 'hire-me', icon: '💼', desc: 'Showcase your services', canPost: 'all' },
-    { cat: 'RESOURCE VAULT', id: 'tool-directory', label: 'tool-directory', icon: '🧰', desc: 'Useful tools', canPost: 'all' },
-    { cat: 'RESOURCE VAULT', id: 'prompt-library', label: 'prompt-library', icon: '📚', desc: 'AI prompts & resources', canPost: 'all' },
-    { cat: 'THE LOUNGE', id: 'general-chat', label: 'general-chat', icon: '💬', desc: 'Open discussion', canPost: 'all' },
-    { cat: 'THE LOUNGE', id: 'voice-room-1', label: 'voice-room-1', icon: '🎙️', isVoice: true },
-    { cat: 'THE LOUNGE', id: 'voice-room-2', label: 'voice-room-2', icon: '🎙️', isVoice: true },
-    { cat: 'THE LOUNGE', id: 'voice-room-3', label: 'voice-room-3', icon: '🎙️', isVoice: true },
+    { cat: 'COMMAND CENTRE', id: 'announcements',   label: 'announcements',   icon: '📣', desc: 'Official announcements', canPost: ['Admin', 'Shadow'] },
+    { cat: 'COMMAND CENTRE', id: 'the-vision',       label: 'the-vision',       icon: '🔭', desc: 'Our mission and direction', canPost: ['Admin'] },
+    { cat: 'COMMAND CENTRE', id: 'rules',            label: 'rules',            icon: '📜', desc: 'Community rules', canPost: ['Admin'] },
+    { cat: 'COMMAND CENTRE', id: 'onboarding',       label: 'onboarding',       icon: '🚀', desc: 'Getting started', canPost: ['Admin', 'Shadow'] },
+    { cat: 'COMMAND CENTRE', id: 'app-suggestions',  label: 'app-suggestions',  icon: '💡', desc: 'Share your ideas', canPost: 'all' },
+    { cat: 'COMMAND CENTRE', id: 'moderator-hub',    label: 'moderator-hub',    icon: '🛡️', desc: 'Admin & Shadow only', canPost: ['Admin', 'Shadow'], hidden: true },
+    { cat: 'OUR SKILLS',     id: 'development-ai',   label: 'development-ai',   icon: '⚙️', desc: 'Dev & AI discussion', canPost: ['Admin', 'Development & AI'] },
+    { cat: 'OUR SKILLS',     id: 'design-creative',  label: 'design-creative',  icon: '🎨', desc: 'Design & creative', canPost: ['Admin', 'Design & Creative'] },
+    { cat: 'OUR SKILLS',     id: 'sales-marketing',  label: 'sales-marketing',  icon: '📈', desc: 'Sales & marketing', canPost: ['Admin', 'Sales & Marketing'] },
+    { cat: 'OUR SKILLS',     id: 'writing-content',  label: 'writing-content',  icon: '✍️', desc: 'Writing & content', canPost: ['Admin', 'Writing & Content'] },
+    { cat: 'OUR SKILLS',     id: 'strategy-management', label: 'strategy-management', icon: '🧭', desc: 'Strategy & management', canPost: ['Admin', 'Strategy & Management'] },
+    { cat: 'SEN',            id: 'find-a-partner',   label: 'find-a-partner',   icon: '🤝', desc: 'Looking for collaborators', canPost: 'all' },
+    { cat: 'SEN',            id: 'hire-me',          label: 'hire-me',          icon: '💼', desc: 'Showcase your services', canPost: 'all' },
+    { cat: 'RESOURCE VAULT', id: 'tool-directory',   label: 'tool-directory',   icon: '🧰', desc: 'Useful tools', canPost: 'all' },
+    { cat: 'RESOURCE VAULT', id: 'prompt-library',   label: 'prompt-library',   icon: '📚', desc: 'AI prompts & resources', canPost: 'all' },
+    { cat: 'THE LOUNGE',     id: 'general-chat',     label: 'general-chat',     icon: '💬', desc: 'Open discussion', canPost: 'all' },
+    { cat: 'THE LOUNGE',     id: 'voice-room-1',     label: 'voice-room-1',     icon: '🎙️', isVoice: true },
+    { cat: 'THE LOUNGE',     id: 'voice-room-2',     label: 'voice-room-2',     icon: '🎙️', isVoice: true },
+    { cat: 'THE LOUNGE',     id: 'voice-room-3',     label: 'voice-room-3',     icon: '🎙️', isVoice: true },
   ];
 
   function canUserPost(channel) {
@@ -1887,8 +1707,6 @@
     if (channel.canPost === 'all') return true;
     const userRank = currentProfile.rank || 'Member';
     const userRoles = currentProfile.roles || [];
-    const shadow = currentProfile.shadowName || false; // shadow co-leader
-    // Admin can always post
     if (userRank === 'Admin') return true;
     return channel.canPost.some(p => {
       if (p === 'Admin') return userRank === 'Admin';
@@ -1912,17 +1730,6 @@
     return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   }
 
-  function timeAgo(ts) {
-    if (!ts) return '';
-    const d = ts.toDate ? ts.toDate() : new Date(ts);
-    const now = new Date();
-    const diff = Math.floor((now - d) / 1000);
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-    return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
-  }
-
   function clockTime(ts) {
     if (!ts) return '';
     const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -1936,8 +1743,7 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  // ===== AUTH INIT =====
-  // Safety timeout — if loading takes >10s something crashed, show error
+  // ===== AUTH =====
   const loadingTimeout = setTimeout(() => {
     const ls = document.getElementById('loadingScreen');
     if (ls && ls.style.display !== 'none') {
@@ -1946,18 +1752,7 @@
           <div style="font-size:32px;margin-bottom:16px">⚠️</div>
           <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:10px">Failed to load</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
-            This is usually a <strong style="color:var(--gold)">Firestore permissions</strong> issue.<br><br>
-            Go to your <strong style="color:var(--text)">Firebase Console → Firestore → Rules</strong> and set:<br>
-          </div>
-          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:var(--text2);text-align:left;margin-bottom:20px;line-height:1.8">
-            rules_version = '2';<br>
-            service cloud.firestore {<br>
-            &nbsp;&nbsp;match /databases/{db}/documents {<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;match /{doc=**} {<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-            &nbsp;&nbsp;}<br>
-            }
+            Go to <strong style="color:var(--text)">Firebase Console → Firestore → Rules</strong> and ensure logged-in users can read/write.
           </div>
           <button onclick="location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:#0C0C0E;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Retry</button>
           &nbsp;
@@ -1967,34 +1762,17 @@
   }, 10000);
 
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      clearTimeout(loadingTimeout);
-      window.location.href = 'auth.html';
-      return;
-    }
+    if (!user) { clearTimeout(loadingTimeout); window.location.href = 'auth.html'; return; }
     currentUser = user;
-    console.log('[GP] Auth OK:', user.email);
-    try {
-      await loadProfile(user.uid);
-      console.log('[GP] Profile loaded:', currentProfile?.name);
-    } catch (e) {
-      console.error('[GP] loadProfile failed:', e);
-      // Still continue — use minimal profile from auth data
+    try { await loadProfile(user.uid); } catch(e) {
       currentProfile = {
-        uid: user.uid,
-        name: user.displayName || user.email?.split('@')[0] || 'Member',
+        uid: user.uid, name: user.displayName || user.email?.split('@')[0] || 'Member',
         username: user.email?.split('@')[0]?.toLowerCase() || 'member',
-        email: user.email || '',
-        roles: [], rank: 'Member', points: 0,
-        verified: false, badges: [], shadowMode: false,
-        showInDirectory: true, bio: ''
+        email: user.email || '', roles: [], rank: 'Member', points: 0,
+        verified: false, badges: [], shadowMode: false, showInDirectory: true, bio: ''
       };
     }
-    try {
-      await initApp();
-    } catch (e) {
-      console.error('[GP] initApp failed:', e);
-      // Force show app anyway so user isn't stuck
+    try { await initApp(); } catch(e) {
       clearTimeout(loadingTimeout);
       document.getElementById('loadingScreen').style.display = 'none';
       document.getElementById('app').classList.add('ready');
@@ -2007,7 +1785,6 @@
     if (snap.exists()) {
       currentProfile = { uid, ...snap.data() };
     } else {
-      // New user — create profile
       const data = {
         name: currentUser.displayName || 'New Member',
         username: (currentUser.email || '').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g,''),
@@ -2016,86 +1793,61 @@
         verified: false, badges: [], shadowMode: false, showInDirectory: true,
         bio: '', joinedAt: serverTimestamp(), lastActive: serverTimestamp()
       };
-      try {
-        await setDoc(doc(db, 'users', uid), data);
-      } catch(e) {
-        console.warn('[GP] Could not save new profile (Firestore rules?):', e.message);
-      }
+      try { await setDoc(doc(db, 'users', uid), data); } catch(e) {}
       currentProfile = { uid, ...data };
     }
     shadowMode = currentProfile.shadowMode || false;
   }
 
   async function initApp() {
-    // Each step is isolated — one failure won't block the whole app
-    try { renderSidebar(); } catch(e) { console.error('[GP] renderSidebar:', e); }
-    try { updateUserBar(); } catch(e) { console.error('[GP] updateUserBar:', e); }
-    try { await loadMembers(); } catch(e) { console.warn('[GP] loadMembers failed (Firestore rules?):', e.message); allMembers = []; }
-    try { renderMembersList(); } catch(e) { console.error('[GP] renderMembersList:', e); }
+    try { renderSidebar(); } catch(e) {}
+    try { updateUserBar(); } catch(e) {}
+    try { await loadMembers(); } catch(e) { allMembers = []; }
+    try { renderMembersList(); } catch(e) {}
     try { initEmojiPicker(); } catch(e) {}
 
-    // Always show the app — never get stuck on loading
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('app').classList.add('ready');
 
-    // Select first visible channel
     try {
       const first = CHANNELS.find(c => canSeeChannel(c));
       if (first) selectChannel(first);
-    } catch(e) { console.error('[GP] selectChannel:', e); }
+    } catch(e) {}
 
-    // Start watching all voice rooms so sidebar shows who's inside
     watchAllVoiceRooms();
-
-    // Update last active (non-blocking)
     updateDoc(doc(db, 'users', currentUser.uid), { lastActive: serverTimestamp() }).catch(()=>{});
   }
 
-  // Watch all voice rooms globally so sidebar always shows live presence
+  // ===== VOICE ROOM SIDEBAR PRESENCE =====
   const voiceRoomGlobalUnsubs = {};
 
   function watchAllVoiceRooms() {
-    const voiceChannels = CHANNELS.filter(c => c.isVoice);
-    voiceChannels.forEach(ch => {
-      if (voiceRoomGlobalUnsubs[ch.id]) return; // already watching
+    CHANNELS.filter(c => c.isVoice).forEach(ch => {
+      if (voiceRoomGlobalUnsubs[ch.id]) return;
       voiceRoomGlobalUnsubs[ch.id] = onSnapshot(
         collection(db, 'voiceRooms', ch.id, 'presence'),
         (snap) => {
           const active = [];
-          snap.forEach(d => {
-            const data = d.data();
-            if (data.active !== false) active.push(data);
-          });
+          snap.forEach(d => { const data = d.data(); if (data.active !== false) active.push(data); });
           updateSidebarVoicePresence(ch.id, active);
         },
-        () => {} // silently ignore errors
+        () => {}
       );
     });
   }
 
   function updateSidebarVoicePresence(channelId, members) {
     const indicator = document.getElementById('vi-' + channelId);
-    const dot = document.getElementById('vdot-' + channelId);
     if (!indicator) return;
-
-    // Clear previous
     indicator.innerHTML = '';
-
     if (members.length === 0) {
-      // Empty — just show dim dot
-      indicator.innerHTML = `<span class="voice-dot" id="vdot-${channelId}"></span>`;
+      indicator.innerHTML = `<span class="voice-dot"></span>`;
       return;
     }
-
-    // Live dot
-    indicator.innerHTML = `<span class="voice-dot live" id="vdot-${channelId}"></span>`;
-
-    // Show up to 3 mini avatars
-    const shown = members.slice(0, 3);
-    const extra = members.length - shown.length;
+    indicator.innerHTML = `<span class="voice-dot live"></span>`;
     const avContainer = document.createElement('span');
     avContainer.className = 'sidebar-voice-avatars';
-    shown.forEach(m => {
+    members.slice(0, 3).forEach(m => {
       const av = document.createElement('span');
       av.className = 'sidebar-voice-av';
       av.title = m.name || 'Member';
@@ -2103,11 +1855,10 @@
       avContainer.appendChild(av);
     });
     indicator.appendChild(avContainer);
-
-    if (extra > 0) {
+    if (members.length > 3) {
       const cnt = document.createElement('span');
       cnt.className = 'sidebar-voice-count';
-      cnt.textContent = '+' + extra;
+      cnt.textContent = '+' + (members.length - 3);
       indicator.appendChild(cnt);
     }
   }
@@ -2138,7 +1889,7 @@
         item.id = 'ch-' + ch.id;
         item.innerHTML = `<span class="channel-icon">${ch.icon}</span>${ch.label}`;
         if (ch.isVoice) {
-          item.innerHTML += `<span class="voice-indicator" id="vi-${ch.id}"><span class="voice-dot" id="vdot-${ch.id}"></span></span>`;
+          item.innerHTML += `<span class="voice-indicator" id="vi-${ch.id}"><span class="voice-dot"></span></span>`;
         }
         item.onclick = () => { selectChannel(ch); closeSidebar(); };
         grp.appendChild(item);
@@ -2158,19 +1909,15 @@
     if (!currentProfile) return;
     const av = document.getElementById('userBarAvatar');
     av.textContent = initials(currentProfile.name);
-    av.style.background = `linear-gradient(135deg, var(--gold-dim), var(--gold))`;
-    const statusDot = document.getElementById('userStatusDot');
-    statusDot.style.background = shadowMode ? 'var(--muted)' : 'var(--online)';
+    document.getElementById('userStatusDot').style.background = shadowMode ? 'var(--muted)' : 'var(--online)';
     document.getElementById('userBarName').textContent = currentProfile.name || 'Unknown';
     document.getElementById('userBarRank').textContent = currentProfile.rank || 'Member';
-    // Show shadow mode if eligible
     const rank = currentProfile.rank || 'Member';
     if (['Co-Leader','Leader','Admin'].includes(rank)) {
       document.getElementById('shadowModeRow').style.display = 'flex';
       const st = document.getElementById('shadowToggle');
       if (shadowMode) st.classList.add('on'); else st.classList.remove('on');
     }
-    // Settings
     document.getElementById('settingsAvatar').textContent = initials(currentProfile.name);
     const n = document.getElementById('settingsName');
     n.textContent = currentProfile.name || '';
@@ -2183,43 +1930,30 @@
     document.getElementById('settingsVerified').textContent = currentProfile.verified ? '✅ Verified' : 'Not verified';
     const vBtn = document.getElementById('verifyBtn');
     if (currentProfile.verified) vBtn.style.display = 'none';
-    const rolesEl = document.getElementById('settingsRoles');
-    rolesEl.innerHTML = (currentProfile.roles || []).map(r=>`<span class="role-tag">${r}</span>`).join('');
+    document.getElementById('settingsRoles').innerHTML = (currentProfile.roles || []).map(r=>`<span class="role-tag">${r}</span>`).join('');
   }
 
   // ===== CHANNELS =====
   function selectChannel(ch) {
     currentChannel = ch;
-    // Update active state
     document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
     const el = document.getElementById('ch-' + ch.id);
     if (el) el.classList.add('active');
-
-    // Update header
     document.getElementById('chIcon').textContent = ch.icon || '#';
     document.getElementById('chName').textContent = ch.label;
     document.getElementById('chDesc').textContent = ch.desc || '';
-
-    if (ch.isVoice) {
-      showVoiceView(ch);
-    } else {
-      showChatView(ch);
-    }
+    if (ch.isVoice) { showVoiceView(ch); }
+    else { showChatView(ch); }
   }
 
   function showChatView(ch) {
-    document.getElementById('chatView').style.display = 'flex';
-    document.getElementById('voiceView').style.display = 'none';
     hideAllViews();
+    document.getElementById('chatView').style.display = 'flex';
     currentView = 'chat';
-
     const canPost = canUserPost(ch);
     document.getElementById('inputWrapper').style.display = canPost ? 'flex' : 'none';
     document.getElementById('readOnlyBar').style.display = canPost ? 'none' : 'block';
-
-    const input = document.getElementById('msgInput');
-    input.placeholder = `Message #${ch.label}`;
-
+    document.getElementById('msgInput').placeholder = `Message #${ch.label}`;
     loadMessages(ch.id);
   }
 
@@ -2229,39 +1963,26 @@
     currentView = 'voice';
     const roomLabel = ch.label.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
     document.getElementById('voiceRoomTitle').textContent = roomLabel;
-    // If someone is in a call in a different room, leave it first
-    if (voiceInRoom && currentChannel?.id !== ch.id) {
-      leaveVoice();
-    }
+    if (voiceInRoom && voiceRoomId !== ch.id) { leaveVoice(); }
     if (!voiceInRoom) {
       document.getElementById('voiceParticipants').innerHTML = '';
       document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
-      const btn = document.getElementById('joinVoiceBtn');
-      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
+      document.getElementById('voiceBtns').innerHTML = '<button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>';
     }
   }
 
   function hideAllViews() {
-    document.getElementById('directoryView').style.display = 'none';
-    document.getElementById('leaderboardView').style.display = 'none';
-    document.getElementById('settingsView').style.display = 'none';
-    document.getElementById('chatView').style.display = 'none';
-    document.getElementById('voiceView').style.display = 'none';
+    ['directoryView','leaderboardView','settingsView','chatView','voiceView'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
   }
 
   function switchView(view) {
     hideAllViews();
     currentView = view;
-    if (view === 'directory') {
-      document.getElementById('directoryView').style.display = 'flex';
-      renderDirectory();
-    } else if (view === 'leaderboard') {
-      document.getElementById('leaderboardView').style.display = 'flex';
-      renderLeaderboard();
-    } else if (view === 'settings') {
-      document.getElementById('settingsView').style.display = 'flex';
-      updateUserBar();
-    }
+    if (view === 'directory') { document.getElementById('directoryView').style.display = 'flex'; renderDirectory(); }
+    else if (view === 'leaderboard') { document.getElementById('leaderboardView').style.display = 'flex'; renderLeaderboard(); }
+    else if (view === 'settings') { document.getElementById('settingsView').style.display = 'flex'; updateUserBar(); }
   }
   window.switchView = switchView;
 
@@ -2270,54 +1991,40 @@
     if (messageUnsubscribe) { messageUnsubscribe(); messageUnsubscribe = null; }
     const area = document.getElementById('messagesArea');
     area.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px">Loading messages...</div>';
-
     const ch = CHANNELS.find(c=>c.id===channelId);
     const pinnedText = pinnedMessages[channelId];
     const bar = document.getElementById('pinnedBar');
-    if (pinnedText) {
-      bar.classList.add('visible');
-      document.getElementById('pinnedText').textContent = pinnedText;
-    } else {
-      bar.classList.remove('visible');
-    }
+    if (pinnedText) { bar.classList.add('visible'); document.getElementById('pinnedText').textContent = pinnedText; }
+    else { bar.classList.remove('visible'); }
 
     const q = query(collection(db, 'channels', channelId, 'messages'), orderBy('createdAt', 'asc'), limit(100));
-
     messageUnsubscribe = onSnapshot(q, (snap) => {
-      area.innerHTML = '';
-      // Welcome block
       area.innerHTML = `
         <div class="channel-welcome">
           <div class="welcome-icon">${ch ? ch.icon : '#'}</div>
           <div class="welcome-title">Welcome to #${channelId}</div>
           <div class="welcome-desc">${ch?.desc || 'This is the beginning of this channel.'}</div>
-        </div>
-      `;
+        </div>`;
 
       if (snap.empty) {
         area.innerHTML += `<div style="color:var(--muted);font-size:13px;padding:12px 0">No messages yet. Be the first to post!</div>`;
       }
 
-      let lastDate = null;
-      let lastAuthorId = null;
+      let lastDate = null, lastAuthorId = null;
       snap.forEach(docSnap => {
         const msg = { id: docSnap.id, ...docSnap.data() };
         const msgDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
         const dateStr = msgDate.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
-
         if (dateStr !== lastDate) {
           lastDate = dateStr;
           area.innerHTML += `<div class="date-divider">${dateStr}</div>`;
           lastAuthorId = null;
         }
-
         const isMe = msg.authorId === currentUser?.uid;
         const isContinuation = lastAuthorId === msg.authorId;
         lastAuthorId = msg.authorId;
-
-        let msgHtml = '';
         const escapedText = (msg.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/@(\w+)/g,'<span class="mention">@$1</span>');
-
+        let msgHtml = '';
         if (!isContinuation) {
           const rankBadge = msg.authorRank ? `<span class="msg-rank-badge">${msg.authorRank}</span>` : '';
           const verCheck = msg.authorVerified ? ` <svg width="12" height="12" viewBox="0 0 24 24" fill="#4A9EBF"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="1.5" fill="none"/></svg>` : '';
@@ -2332,7 +2039,6 @@
                     <span class="msg-time">${clockTime(msg.createdAt)}</span>
                   </div>
                   <div class="msg-text">${escapedText}${msg.edited ? ' <span style="font-size:11px;color:var(--muted)">(edited)</span>' : ''}</div>
-                  ${msg.pinned ? '<div class="pinned-indicator">📌 Pinned</div>' : ''}
                 </div>
                 <div class="msg-actions">
                   ${isMe ? `<button class="msg-action-btn" onclick="pinMsg('${msg.id}','${channelId}','${(msg.text||'').replace(/'/g,"\\'")}')">📌</button>` : ''}
@@ -2345,7 +2051,7 @@
           msgHtml = `
             <div class="msg-continuation" data-id="${msg.id}">
               <span class="msg-hover-time">${clockTime(msg.createdAt)}</span>
-              <div class="msg-text">${escapedText}${msg.edited ? ' <span style="font-size:11px;color:var(--muted)">(edited)</span>' : ''}</div>
+              <div class="msg-text">${escapedText}</div>
               <div class="msg-actions">
                 ${isMe ? `<button class="msg-action-btn" onclick="pinMsg('${msg.id}','${channelId}','${(msg.text||'').replace(/'/g,"\\'")}')">📌</button>` : ''}
                 <button class="msg-action-btn" onclick="copyMsg('${(msg.text||'').replace(/'/g,"\\'")}')">📋</button>
@@ -2357,25 +2063,7 @@
       });
       area.scrollTop = area.scrollHeight;
     }, err => {
-      console.error('[GP] Messages error:', err.code, err.message);
-      area.innerHTML = `
-        <div style="padding:24px;max-width:400px">
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">⚠️ Could not load messages</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px">
-            Your Firestore security rules are blocking reads.<br>
-            In <strong style="color:var(--text)">Firebase Console → Firestore → Rules</strong>, set:
-          </div>
-          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:var(--text2);line-height:1.8">
-            rules_version = '2';<br>
-            service cloud.firestore {<br>
-            &nbsp;&nbsp;match /databases/{db}/documents {<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;match /{doc=**} {<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-            &nbsp;&nbsp;}<br>
-            }
-          </div>
-        </div>`;
+      area.innerHTML = `<div style="padding:24px;font-size:13px;color:var(--error)">⚠️ Could not load messages — check Firestore rules (allow read/write if request.auth != null)</div>`;
     });
   }
 
@@ -2385,27 +2073,18 @@
     const text = input.value.trim();
     if (!text) return;
     if (!canUserPost(currentChannel)) { showToast('You cannot post in this channel'); return; }
-
     input.value = '';
     autoResize(input);
-
     try {
       await addDoc(collection(db, 'channels', currentChannel.id, 'messages'), {
-        text,
-        authorId: currentUser.uid,
+        text, authorId: currentUser.uid,
         authorName: currentProfile.name || 'Unknown',
         authorRank: currentProfile.rank || 'Member',
         authorVerified: currentProfile.verified || false,
-        createdAt: serverTimestamp(),
-        edited: false,
-        pinned: false
+        createdAt: serverTimestamp(), edited: false, pinned: false
       });
-      // Award points for posting
       awardPoints(currentUser.uid, 2);
-    } catch(e) {
-      console.error('Send error:', e);
-      showToast('Failed to send message');
-    }
+    } catch(e) { showToast('Failed to send message'); }
   };
 
   window.copyMsg = function(text) {
@@ -2424,51 +2103,29 @@
     try {
       await updateDoc(doc(db, 'channels', channelId, 'messages', msgId), { pinned: true });
       pinnedMessages[channelId] = text;
-      const bar = document.getElementById('pinnedBar');
-      bar.classList.add('visible');
+      document.getElementById('pinnedBar').classList.add('visible');
       document.getElementById('pinnedText').textContent = text;
       showToast('Message pinned');
     } catch(e) { showToast('Could not pin'); }
   };
 
-  // ===== POINTS =====
   async function awardPoints(uid, pts) {
     try {
       const ref = doc(db, 'users', uid);
       const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const cur = snap.data().points || 0;
-        await updateDoc(ref, { points: cur + pts });
-      }
+      if (snap.exists()) await updateDoc(ref, { points: (snap.data().points || 0) + pts });
     } catch(e) {}
   }
 
   // ===== MEMBERS =====
   async function loadMembers() {
-    try {
-      const snap = await getDocs(collection(db, 'users'));
-      allMembers = [];
-      snap.forEach(d => {
-        const data = d.data();
-        // Skip deleted accounts — must have a name and not be flagged deleted
-        if (!data.name) return;
-        if (data.deleted === true) return;
-        // Skip ghost accounts — email required (all real signups have one)
-        if (!data.email) return;
-        allMembers.push({ uid: d.id, ...data });
-      });
-      console.log('[GP] Loaded', allMembers.length, 'members');
-    } catch(e) {
-      console.error('loadMembers error:', e);
-      allMembers = [];
-    }
-  }
-
-  // Call this when an account is deleted to mark it in Firestore
-  async function markAccountDeleted(uid) {
-    try {
-      await updateDoc(doc(db, 'users', uid), { deleted: true, name: null, email: null });
-    } catch(e) {}
+    const snap = await getDocs(collection(db, 'users'));
+    allMembers = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (!data.name || data.deleted === true || !data.email) return;
+      allMembers.push({ uid: d.id, ...data });
+    });
   }
 
   function renderMembersList() {
@@ -2526,28 +2183,14 @@
     const grid = document.getElementById('directoryGrid');
     if (!grid) return;
     let members = allMembers.filter(m => m.showInDirectory !== false);
-    if (currentDirFilter !== 'all') {
-      members = members.filter(m => (m.roles||[]).includes(currentDirFilter));
-    }
-    if (search) {
-      members = members.filter(m =>
-        (m.name||'').toLowerCase().includes(search) ||
-        (m.username||'').toLowerCase().includes(search)
-      );
-    }
-    if (members.length === 0) {
-      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No members found</div>';
-      return;
-    }
+    if (currentDirFilter !== 'all') members = members.filter(m => (m.roles||[]).includes(currentDirFilter));
+    if (search) members = members.filter(m => (m.name||'').toLowerCase().includes(search) || (m.username||'').toLowerCase().includes(search));
+    if (members.length === 0) { grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No members found</div>'; return; }
     grid.innerHTML = members.map(m => {
       const statusColor = m.uid === currentUser?.uid ? (shadowMode ? 'var(--muted)' : 'var(--online)') : 'var(--offline)';
       const verBadge = m.verified ? `<svg class="verified-badge" viewBox="0 0 24 24" fill="#4A9EBF"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="1.5" fill="none"/></svg>` : '';
-      return `
-        <div class="member-card" onclick="showProfilePopupById('${m.uid}')">
-          <div class="card-avatar">
-            ${initials(m.name)}
-            <div class="card-status-dot" style="background:${statusColor}"></div>
-          </div>
+      return `<div class="member-card" onclick="showProfilePopupById('${m.uid}')">
+          <div class="card-avatar">${initials(m.name)}<div class="card-status-dot" style="background:${statusColor}"></div></div>
           <div class="card-name">${m.name||'Unknown'}${verBadge}</div>
           <div class="card-rank">${m.rank||'Member'}</div>
           <div class="card-roles">${(m.roles||[]).map(r=>`<span class="role-tag">${r}</span>`).join('')}</div>
@@ -2561,32 +2204,23 @@
     const podiumEl = document.getElementById('lbPodium');
     const listEl = document.getElementById('lbList');
     if (!podiumEl || !listEl) return;
-
-    // Podium top 3 — arranged 2nd, 1st, 3rd
     const top3 = sorted.slice(0,3);
     const order = [top3[1], top3[0], top3[2]].filter(Boolean);
     const places = [2,1,3];
     podiumEl.innerHTML = '';
     order.forEach((m, i) => {
       const place = places[i];
-      const crown = place === 1 ? '<span class="podium-crown">👑</span>' : '';
       podiumEl.innerHTML += `
         <div class="podium-place">
-          <div class="podium-av">
-            ${crown}
-            ${initials(m.name)}
-          </div>
+          <div class="podium-av">${place===1?'<span class="podium-crown">👑</span>':''}${initials(m.name)}</div>
           <div class="podium-name">${m.name||'?'}</div>
           <div class="podium-pts">${m.points||0} pts</div>
           <div class="podium-block">${place}</div>
         </div>`;
     });
-
-    // Full list
     listEl.innerHTML = sorted.map((m, i) => {
       const isMe = m.uid === currentUser?.uid;
-      return `
-        <div class="rank-row ${isMe?'me':''}">
+      return `<div class="rank-row ${isMe?'me':''}">
           <div class="rank-number">${i+1}</div>
           <div class="rank-av">${initials(m.name)}</div>
           <div class="rank-info">
@@ -2599,8 +2233,6 @@
   }
 
   // ===== PROFILE POPUP =====
-  let currentPopupUid = null;
-
   window.showProfilePopup = function(e, uid) {
     e.stopPropagation();
     showProfilePopupById(uid, e.clientX, e.clientY);
@@ -2609,7 +2241,6 @@
   window.showProfilePopupById = function(uid, x, y) {
     const m = allMembers.find(m=>m.uid===uid) || (uid===currentUser?.uid ? currentProfile : null);
     if (!m) return;
-    currentPopupUid = uid;
     document.getElementById('ppAvatar').textContent = initials(m.name);
     document.getElementById('ppName').textContent = m.name || 'Unknown';
     document.getElementById('ppUsername').textContent = '@' + (m.username || '');
@@ -2618,492 +2249,391 @@
     document.getElementById('ppRoles').innerHTML = (m.roles||[]).map(r=>`<span class="role-tag">${r}</span>`).join('');
     const pop = document.getElementById('profilePopup');
     pop.classList.add('open');
-    // Position
     if (x !== undefined && y !== undefined) {
-      const pw = 240, ph = 300;
       const vw = window.innerWidth, vh = window.innerHeight;
-      let left = Math.min(x + 12, vw - pw - 16);
-      let top = Math.min(y, vh - ph - 16);
-      pop.style.left = left + 'px';
-      pop.style.top = top + 'px';
+      pop.style.left = Math.min(x + 12, vw - 256) + 'px';
+      pop.style.top  = Math.min(y, vh - 320) + 'px';
+      pop.style.transform = '';
     } else {
-      pop.style.left = '50%';
-      pop.style.top = '50%';
+      pop.style.left = '50%'; pop.style.top = '50%';
       pop.style.transform = 'translate(-50%,-50%)';
     }
   };
 
   window.closeProfilePopup = function() {
-    document.getElementById('profilePopup').classList.remove('open');
-    document.getElementById('profilePopup').style.transform = '';
+    const pop = document.getElementById('profilePopup');
+    pop.classList.remove('open');
+    pop.style.transform = '';
   };
 
-  window.openDMWith = function() {
-    closeProfilePopup();
-    window.location.href = 'messages.html';
-  };
+  window.openDMWith = function() { closeProfilePopup(); window.location.href = 'messages.html'; };
 
   document.addEventListener('click', (e) => {
     const pop = document.getElementById('profilePopup');
-    if (pop.classList.contains('open') && !pop.contains(e.target)) {
-      closeProfilePopup();
-    }
+    if (pop.classList.contains('open') && !pop.contains(e.target)) closeProfilePopup();
     const ep = document.getElementById('emojiPicker');
-    if (ep.classList.contains('open') && !ep.contains(e.target) && e.target.id !== 'emojiBtn') {
-      ep.classList.remove('open');
-    }
+    if (ep.classList.contains('open') && !ep.contains(e.target) && e.target.id !== 'emojiBtn') ep.classList.remove('open');
   });
 
-  // ===== VOICE (PeerJS — zero setup, completely free) =====
-  // Uses PeerJS free public broker for signaling + WebRTC p2p audio
-  // No accounts, no API keys, no server to deploy, no usage limits.
+  // ===========================
+  // ===== VOICE — Firebase WebRTC Signaling =====
+  // Uses Firestore to exchange WebRTC offer/answer/ICE candidates.
+  // NO third-party broker, NO PeerJS, NO separate server.
+  // Firestore paths:
+  //   voiceRooms/{roomId}/presence/{uid}         — who is in the room
+  //   voiceRooms/{roomId}/connections/{connId}   — offer + answer (connId = callerUid_calleeUid)
+  //   voiceRooms/{roomId}/connections/{connId}/iceCandidates — ICE candidates
+  // ===========================
 
-  let localStream = null;
-  let myPeer = null;
-  let voiceCalls = {};        // peerId -> MediaConnection
-  let voicePeerNames = {};    // peerId -> displayName
-  let voiceRoomPeers = [];    // list of peer IDs in this room (from Firestore)
-  let voiceRoomUnsub = null;  // Firestore listener
+  // TURN/STUN — relay audio when direct P2P fails (most networks need this)
+  const ICE_SERVERS = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    // Open Relay — free, no account needed
+    { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+  ];
 
-  // Load PeerJS dynamically (CDN, free)
-  function loadPeerJS() {
-    return new Promise((resolve, reject) => {
-      if (window.Peer) { resolve(); return; }
-      const s = document.createElement('script');
-      s.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
+  let localStream    = null;
+  let myPeerConns    = {};   // uid -> RTCPeerConnection
+  let voiceRoomUnsub = null; // presence listener
+  let connUnsub      = null; // incoming connections listener
+  let iceUnsubs      = {};   // uid -> unsub fn
+  let voiceRoomId    = null;
+  let isDeafened     = false;
+  let volumeIdx      = 1;
+  const VOLUME_LEVELS = [0.5, 1, 1.5];
+  const VOLUME_ICONS  = ['🔈', '🔉', '🔊'];
+  const VOLUME_LABELS = ['50%', '100%', '150%'];
 
-  // Each user's PeerJS ID is deterministic: uid + roomId (so we can find each other)
-  function makePeerId(uid, roomId) {
-    // PeerJS IDs must be alphanumeric, max 50 chars
-    const safe = (uid + '-' + roomId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
-    return safe;
-  }
+  // ── PEER CONNECTION ──────────────────────────────────────────────────────
+  function createPeerConn(remoteUid) {
+    if (myPeerConns[remoteUid]) return myPeerConns[remoteUid];
+    console.log('[Voice] Creating peer conn with', remoteUid);
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceCandidatePoolSize: 10 });
+    myPeerConns[remoteUid] = pc;
 
-  // Store presence in Firestore so others know who's in the room
-  async function joinRoomPresence(roomId) {
-    if (!currentUser) return;
-    try {
-      await setDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), {
-        uid: currentUser.uid,
-        name: currentProfile?.name || 'Member',
-        peerId: makePeerId(currentUser.uid, roomId),
-        joinedAt: serverTimestamp()
-      });
-    } catch(e) { console.warn('[Voice] Could not write presence:', e.message); }
-  }
+    // Add our audio tracks
+    if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-  async function leaveRoomPresence(roomId) {
-    if (!currentUser || !roomId) return;
-    try {
-      await updateDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), { active: false }).catch(async () => {
-        // fallback: just set inactive flag — deleteDoc needs to be imported separately
-        await setDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), { active: false, uid: currentUser.uid });
-      });
-    } catch(e) {}
-  }
+    // Receive their audio
+    pc.ontrack = (event) => {
+      console.log('[Voice] Got remote track from', remoteUid);
+      playAudio(remoteUid, event.streams[0]);
+      document.getElementById('vpa-' + remoteUid)?.classList.add('speaking');
+    };
 
-  function watchRoomPresence(roomId) {
-    if (voiceRoomUnsub) { voiceRoomUnsub(); voiceRoomUnsub = null; }
-    voiceRoomUnsub = onSnapshot(
-      collection(db, 'voiceRooms', roomId, 'presence'),
+    // Send our ICE candidates to Firestore so the remote peer can use them
+    pc.onicecandidate = ({ candidate }) => {
+      if (!candidate || !voiceRoomId) return;
+      // Store under OUR uid so the remote knows these are from us
+      addDoc(
+        collection(db, 'voiceRooms', voiceRoomId, 'ice_' + currentUser.uid + '_to_' + remoteUid),
+        { c: candidate.toJSON(), ts: serverTimestamp() }
+      ).catch(()=>{});
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log('[Voice] State with', remoteUid, ':', pc.connectionState);
+      if (['failed','disconnected','closed'].includes(pc.connectionState)) {
+        removePeerUI(remoteUid);
+      }
+    };
+
+    // Collect their ICE candidates from Firestore
+    if (iceUnsubs[remoteUid]) iceUnsubs[remoteUid]();
+    iceUnsubs[remoteUid] = onSnapshot(
+      collection(db, 'voiceRooms', voiceRoomId, 'ice_' + remoteUid + '_to_' + currentUser.uid),
       (snap) => {
-        snap.docChanges().forEach(change => {
-          const data = change.doc.data();
-          if (data.uid === currentUser?.uid) return; // skip self
-          if (data.active === false) {
-            removePeerUI(data.peerId);
-            return;
-          }
-          if (change.type === 'added') {
-            // Someone joined — call them if we're already in
-            voicePeerNames[data.peerId] = data.name;
-            if (voiceInRoom && myPeer) {
-              callPeer(data.peerId, data.name);
-            }
-            addParticipantUI(data.peerId, data.name);
-          }
-          if (change.type === 'removed' || change.type === 'modified') {
-            if (change.type === 'removed' || data.active === false) {
-              removePeerUI(data.peerId);
-            }
-          }
+        snap.docChanges().forEach(ch => {
+          if (ch.type !== 'added') return;
+          const c = ch.doc.data().c;
+          if (c) pc.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
         });
-        // Update sub count
-        updateParticipantCount(snap.size);
       },
-      (err) => { console.warn('[Voice] Presence watch error:', err.message); }
+      ()=>{}
     );
+
+    return pc;
   }
 
-  function callPeer(peerId, name) {
-    if (!localStream || !myPeer || voiceCalls[peerId]) return;
-    console.log('[Voice] Calling peer:', peerId);
-    const call = myPeer.call(peerId, localStream);
-    if (!call) return;
-    voiceCalls[peerId] = call;
-    call.on('stream', (remoteStream) => {
-      playAudio(peerId, remoteStream);
-      document.getElementById('vpa-' + peerId)?.classList.add('speaking');
-    });
-    call.on('close', () => { removePeerUI(peerId); });
-    call.on('error', (e) => { console.warn('[Voice] Call error:', e); });
+  // ── OFFER / ANSWER ───────────────────────────────────────────────────────
+  async function sendOffer(remoteUid, remoteName) {
+    if (myPeerConns[remoteUid]) return;
+    addParticipantUI(remoteUid, remoteName);
+    const pc = createPeerConn(remoteUid);
+
+    const offer = await pc.createOffer({ offerToReceiveAudio: true });
+    await pc.setLocalDescription(offer);
+
+    await setDoc(
+      doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
+      { sdp: offer.sdp, type: offer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp() }
+    ).catch(e => console.warn('[Voice] offer write failed:', e.message));
+
+    // Listen for their answer
+    const answerRef = doc(db, 'voiceRooms', voiceRoomId, 'answers', remoteUid + '_to_' + currentUser.uid);
+    const unsub = onSnapshot(answerRef, async (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (pc.signalingState !== 'have-local-offer') return;
+      await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
+      console.log('[Voice] Set remote answer from', remoteName);
+      unsub();
+    }, ()=>{});
   }
 
-  function playAudio(peerId, stream) {
-    let audio = document.getElementById('audio-' + peerId);
+  async function handleOffer(data) {
+    const remoteUid = data.from;
+    if (myPeerConns[remoteUid]) return; // already connected
+
+    const remoteName = await getNameByUid(remoteUid);
+    addParticipantUI(remoteUid, remoteName);
+    const pc = createPeerConn(remoteUid);
+
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    await setDoc(
+      doc(db, 'voiceRooms', voiceRoomId, 'answers', currentUser.uid + '_to_' + remoteUid),
+      { sdp: answer.sdp, type: answer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp() }
+    ).catch(e => console.warn('[Voice] answer write failed:', e.message));
+
+    console.log('[Voice] Sent answer to', remoteName);
+  }
+
+  async function getNameByUid(uid) {
+    const m = allMembers.find(m=>m.uid===uid);
+    if (m) return m.name;
+    try { const s = await getDoc(doc(db,'users',uid)); return s.data()?.name || 'Member'; } catch(e) { return 'Member'; }
+  }
+
+  // ── UI HELPERS ────────────────────────────────────────────────────────────
+  function playAudio(uid, stream) {
+    let audio = document.getElementById('audio-' + uid);
     if (!audio) {
       audio = document.createElement('audio');
-      audio.id = 'audio-' + peerId;
+      audio.id = 'audio-' + uid;
       audio.autoplay = true;
       audio.style.display = 'none';
       document.body.appendChild(audio);
     }
     audio.srcObject = stream;
+    audio.volume = VOLUME_LEVELS[volumeIdx];
   }
 
-  function addParticipantUI(peerId, name) {
+  function addParticipantUI(uid, name) {
     const container = document.getElementById('voiceParticipants');
-    if (!container || document.getElementById('vp-' + peerId)) return;
+    if (!container || document.getElementById('vp-' + uid)) return;
     const el = document.createElement('div');
     el.className = 'voice-participant';
-    el.id = 'vp-' + peerId;
-    el.innerHTML = `
-      <div class="vp-avatar" id="vpa-${peerId}">${initials(name)}</div>
-      <div class="vp-name">${name}</div>`;
+    el.id = 'vp-' + uid;
+    el.innerHTML = `<div class="vp-avatar" id="vpa-${uid}">${initials(name)}</div><div class="vp-name">${name}</div>`;
     container.appendChild(el);
+    updateParticipantCount();
   }
 
-  function removePeerUI(peerId) {
-    const el = document.getElementById('vp-' + peerId);
-    if (el) el.remove();
-    const audio = document.getElementById('audio-' + peerId);
-    if (audio) audio.remove();
-    if (voiceCalls[peerId]) { voiceCalls[peerId].close(); delete voiceCalls[peerId]; }
-    delete voicePeerNames[peerId];
-    // Update count
-    const count = document.querySelectorAll('#voiceParticipants .voice-participant').length;
-    updateParticipantCount(count);
+  function removePeerUI(uid) {
+    document.getElementById('vp-' + uid)?.remove();
+    document.getElementById('audio-' + uid)?.remove();
+    if (myPeerConns[uid]) { try { myPeerConns[uid].close(); } catch(e){} delete myPeerConns[uid]; }
+    if (iceUnsubs[uid]) { iceUnsubs[uid](); delete iceUnsubs[uid]; }
+    updateParticipantCount();
   }
 
-  function updateParticipantCount(total) {
+  function updateParticipantCount() {
     const sub = document.getElementById('voiceRoomSub');
     if (!sub || !voiceInRoom) return;
-    if (total <= 1) sub.textContent = 'Just you in here — waiting for others';
-    else sub.textContent = `${total} people in this room`;
+    const count = document.querySelectorAll('#voiceParticipants .voice-participant').length;
+    sub.textContent = count <= 1 ? 'Just you — waiting for others to join' : count + ' people in this room';
   }
 
+  // ── JOIN ─────────────────────────────────────────────────────────────────
   window.joinVoice = async function() {
     if (!currentChannel?.isVoice) return;
     const btn = document.getElementById('joinVoiceBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
 
-    // 1. Load PeerJS library
-    try {
-      await loadPeerJS();
-    } catch(e) {
-      showToast('Could not load voice library — check your connection');
-      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
-      return;
-    }
+    voiceRoomId = currentChannel.id;
 
-    // 2. Get microphone
+    // 1. Get mic with audio processing
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          // Higher sample rate = better frequency range
-          sampleRate: 48000,
-          sampleSize: 16,
-          channelCount: 1,           // mono is better for voice calls
-          // Noise suppression — removes background hiss
-          noiseSuppression: true,
-          // Echo cancellation — stops your speakers feeding back into mic
-          echoCancellation: true,
-          // Auto gain control — keeps volume consistent even if you move away from mic
-          autoGainControl: true,
-          // Latency hint — prioritise low latency over quality consistency
-          latency: 0.01
-        },
+      const rawStream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: 48000, channelCount: 1, noiseSuppression: true, echoCancellation: true, autoGainControl: true },
         video: false
       });
 
-      // Apply Web Audio API processing for even better quality
+      // Web Audio processing
       try {
-        const audioCtx = new AudioContext({ sampleRate: 48000 });
-        const source = audioCtx.createMediaStreamSource(localStream);
-
-        // Dynamics compressor — evens out loud/quiet moments
-        const compressor = audioCtx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
-        compressor.knee.setValueAtTime(30, audioCtx.currentTime);
-        compressor.ratio.setValueAtTime(4, audioCtx.currentTime);
-        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
-        compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
-
-        // High-pass filter — cuts out low rumble (desk thumps, AC hum) below 80Hz
-        const highPass = audioCtx.createBiquadFilter();
-        highPass.type = 'highpass';
-        highPass.frequency.setValueAtTime(80, audioCtx.currentTime);
-        highPass.Q.setValueAtTime(0.7, audioCtx.currentTime);
-
-        // Destination stream to use instead of raw mic
-        const destination = audioCtx.createMediaStreamDestination();
-        source.connect(highPass);
-        highPass.connect(compressor);
-        compressor.connect(destination);
-
-        // Replace raw mic stream with processed stream
-        const processedStream = destination.stream;
-        // Keep video tracks (none) + replace audio with processed
-        localStream = new MediaStream([
-          ...processedStream.getAudioTracks()
-        ]);
-      } catch(audioErr) {
-        // Web Audio processing failed — fall back to raw mic, still works fine
-        console.warn('[Voice] Web Audio processing unavailable:', audioErr.message);
+        const ctx = new AudioContext({ sampleRate: 48000 });
+        const src = ctx.createMediaStreamSource(rawStream);
+        const hpf = ctx.createBiquadFilter();
+        hpf.type = 'highpass'; hpf.frequency.setValueAtTime(80, ctx.currentTime);
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.setValueAtTime(-24, ctx.currentTime);
+        comp.knee.setValueAtTime(30, ctx.currentTime);
+        comp.ratio.setValueAtTime(4, ctx.currentTime);
+        comp.attack.setValueAtTime(0.003, ctx.currentTime);
+        comp.release.setValueAtTime(0.25, ctx.currentTime);
+        const dest = ctx.createMediaStreamDestination();
+        src.connect(hpf); hpf.connect(comp); comp.connect(dest);
+        localStream = new MediaStream(dest.stream.getAudioTracks());
+      } catch(e) {
+        localStream = rawStream;
+        console.warn('[Voice] Web Audio skip:', e.message);
       }
     } catch(e) {
-      const msg = e.name === 'NotAllowedError'
-        ? 'Microphone blocked — allow mic access in your browser settings'
-        : 'Could not access microphone: ' + e.message;
-      showToast(msg);
+      showToast(e.name === 'NotAllowedError' ? 'Mic blocked — allow mic access in browser settings' : 'Mic error: ' + e.message);
       if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
       return;
     }
-
-    // 3. Create PeerJS connection
-    const myPeerId = makePeerId(currentUser.uid, currentChannel.id);
-    console.log('[Voice] My peer ID:', myPeerId);
-
-    // Fetch free TURN credentials from Open Relay (Metered) — completely free tier
-    // These relay audio when direct peer-to-peer connection fails (fixes most "can't hear" issues)
-    let iceServers = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-    ];
-
-    try {
-      const turnRes = await fetch('https://growth-partner.metered.live/api/v1/turn/credentials?apiKey=openrelayproject');
-      if (turnRes.ok) {
-        const turnCreds = await turnRes.json();
-        iceServers = [...iceServers, ...turnCreds];
-        console.log('[Voice] TURN servers loaded:', turnCreds.length);
-      }
-    } catch(e) {
-      console.warn('[Voice] Could not fetch TURN servers, using STUN only:', e.message);
-    }
-
-    // Fallback hardcoded Open Relay TURN servers (always available, no key needed)
-    if (iceServers.length <= 2) {
-      iceServers = [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:openrelay.metered.ca:80' },
-        { urls: 'turn:openrelay.metered.ca:80',        username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443',       username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-      ];
-      console.log('[Voice] Using fallback TURN servers');
-    }
-
-    try {
-      await new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(() => reject(new Error('PeerJS connection timed out')), 12000);
-
-        function createPeer(id) {
-          return new Peer(id, {
-            debug: 0,
-            config: { iceServers, iceTransportPolicy: 'all' }
-          });
-        }
-
-        myPeer = createPeer(myPeerId);
-
-        myPeer.on('open', (id) => {
-          clearTimeout(timeoutId);
-          console.log('[Voice] PeerJS connected, ID:', id);
-          resolve();
-        });
-        myPeer.on('error', (e) => {
-          clearTimeout(timeoutId);
-          console.warn('[Voice] PeerJS error type:', e.type);
-          // ID taken = already connected from another tab, make unique ID
-          if (e.type === 'unavailable-id') {
-            myPeer.destroy();
-            myPeer = createPeer(myPeerId + Date.now().toString(36).slice(-4));
-            myPeer.on('open', resolve);
-            myPeer.on('error', reject);
-          } else {
-            reject(e);
-          }
-        });
-      });
-    } catch(e) {
-      console.error('[Voice] PeerJS error:', e);
-      showToast('Could not connect to voice — try again');
-      localStream.getTracks().forEach(t => t.stop());
-      localStream = null;
-      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
-      return;
-    }
-
-    // 4. Answer incoming calls (audio + screen share)
-    myPeer.on('call', (call) => {
-      const isScreen = call.metadata?.type === 'screen';
-
-      if (isScreen) {
-        // Screen share — don't answer with our stream, just receive
-        call.answer();
-        call.on('stream', (remoteStream) => {
-          const vid = document.getElementById('screenVideo');
-          const container = document.getElementById('screenshareContainer');
-          const sharerName = call.metadata?.name || voicePeerNames[call.peer] || 'Someone';
-          if (vid && container) {
-            vid.srcObject = remoteStream;
-            vid.muted = false;
-            container.classList.add('active');
-            document.getElementById('screenshareWho').textContent = sharerName + ' is sharing';
-          }
-        });
-        call.on('close', () => {
-          const container = document.getElementById('screenshareContainer');
-          const vid = document.getElementById('screenVideo');
-          if (container) container.classList.remove('active');
-          if (vid) vid.srcObject = null;
-        });
-      } else {
-        // Regular audio call
-        call.answer(localStream);
-        voiceCalls[call.peer] = call;
-        call.on('stream', (remoteStream) => {
-          const name = voicePeerNames[call.peer] || 'Member';
-          addParticipantUI(call.peer, name);
-          playAudio(call.peer, remoteStream);
-          document.getElementById('vpa-' + call.peer)?.classList.add('speaking');
-        });
-        call.on('close', () => removePeerUI(call.peer));
-      }
-    });
 
     voiceInRoom = true;
 
-    // 5. Add self to UI
+    // 2. Show self
     document.getElementById('voiceParticipants').innerHTML = '';
     addParticipantUI('me', currentProfile?.name || 'You');
     document.getElementById('vpa-me')?.classList.add('speaking');
 
-    // 6. Write presence to Firestore + watch for others
-    await joinRoomPresence(currentChannel.id);
-    watchRoomPresence(currentChannel.id);
+    // 3. Write presence
+    await setDoc(doc(db, 'voiceRooms', voiceRoomId, 'presence', currentUser.uid), {
+      uid: currentUser.uid, name: currentProfile?.name || 'Member',
+      active: true, joinedAt: serverTimestamp()
+    }).catch(e => console.warn('[Voice] Presence write failed:', e.message));
 
-    // 7. Update buttons
+    // 4. Watch who is in the room — call everyone already there
+    if (voiceRoomUnsub) voiceRoomUnsub();
+    voiceRoomUnsub = onSnapshot(
+      collection(db, 'voiceRooms', voiceRoomId, 'presence'),
+      async (snap) => {
+        for (const change of snap.docChanges()) {
+          const data = change.doc.data();
+          if (data.uid === currentUser.uid) continue;
+          if (change.type === 'added' && data.active !== false) {
+            // They were already here — we call them
+            if (!myPeerConns[data.uid]) await sendOffer(data.uid, data.name);
+          }
+          if ((change.type === 'modified' && data.active === false) || change.type === 'removed') {
+            removePeerUI(data.uid);
+          }
+        }
+      },
+      e => console.warn('[Voice] Presence watch error:', e.message)
+    );
+
+    // 5. Watch for incoming offers from peers who join AFTER us
+    if (connUnsub) connUnsub();
+    connUnsub = onSnapshot(
+      collection(db, 'voiceRooms', voiceRoomId, 'offers'),
+      async (snap) => {
+        for (const change of snap.docChanges()) {
+          if (change.type !== 'added') continue;
+          const data = change.doc.data();
+          if (data.to !== currentUser.uid) continue; // not for us
+          if (myPeerConns[data.from]) continue;       // already connected
+          await handleOffer(data);
+        }
+      },
+      e => console.warn('[Voice] Offers watch error:', e.message)
+    );
+
     renderCallButtons();
     awardPoints(currentUser?.uid, 3);
+    showToast('Joined voice room');
   };
 
+  // ── LEAVE ────────────────────────────────────────────────────────────────
+  window.leaveVoice = async function() {
+    voiceInRoom = false;
+    const roomId = voiceRoomId;
+    voiceRoomId = null;
+
+    Object.keys(myPeerConns).forEach(uid => removePeerUI(uid));
+    myPeerConns = {};
+
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.remove());
+
+    Object.values(iceUnsubs).forEach(fn => fn());
+    iceUnsubs = {};
+
+    if (voiceRoomUnsub) { voiceRoomUnsub(); voiceRoomUnsub = null; }
+    if (connUnsub) { connUnsub(); connUnsub = null; }
+
+    if (roomId) {
+      await setDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid),
+        { active: false, uid: currentUser.uid }, { merge: true }
+      ).catch(()=>{});
+    }
+
+    if (screenStream) stopScreenShare();
+
+    document.getElementById('voiceParticipants').innerHTML = '';
+    document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
+    document.getElementById('voiceBtns').innerHTML = '<button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>';
+    showToast('Left voice room');
+  };
+
+  // ── CALL CONTROLS ────────────────────────────────────────────────────────
   function renderCallButtons() {
     document.getElementById('voiceBtns').innerHTML = `
       <div class="call-controls">
-
         <div class="call-btn">
-          <button class="call-btn-circle" id="muteBtn" onclick="toggleMute()" title="Mute / Unmute">
-            🎤
-          </button>
+          <button class="call-btn-circle" id="muteBtn" onclick="toggleMute()">🎤</button>
           <span class="call-btn-label" id="muteLbl">Mute</span>
         </div>
-
         <div class="call-btn">
-          <button class="call-btn-circle" id="deafenBtn" onclick="toggleDeafen()" title="Deafen">
-            🔊
-          </button>
+          <button class="call-btn-circle" id="deafenBtn" onclick="toggleDeafen()">🔊</button>
           <span class="call-btn-label" id="deafenLbl">Deafen</span>
         </div>
-
         <div class="call-btn">
-          <button class="call-btn-circle" id="shareBtn" onclick="toggleScreenShare()" title="Share Screen">
-            🖥️
-          </button>
+          <button class="call-btn-circle" id="shareBtn" onclick="toggleScreenShare()">🖥️</button>
           <span class="call-btn-label" id="shareLbl">Share</span>
         </div>
-
         <div class="call-btn">
-          <button class="call-btn-circle" id="volBtn" onclick="cycleVolume()" title="Volume">
-            🔉
-          </button>
+          <button class="call-btn-circle" id="volBtn" onclick="cycleVolume()">🔉</button>
           <span class="call-btn-label" id="volLbl">Volume</span>
         </div>
-
         <div class="call-btn">
-          <button class="call-btn-circle danger" onclick="leaveVoice()" title="Leave">
-            📞
-          </button>
-          <span class="call-btn-label danger">Leave</span>
+          <button class="call-btn-circle danger" onclick="leaveVoice()">📞</button>
+          <span class="call-btn-label">Leave</span>
         </div>
-
       </div>`;
   }
-
-  let isDeafened = false;
-  let volumeLevel = 1; // 0.5, 1, 1.5 cycle
-  const VOLUME_LEVELS = [0.5, 1, 1.5];
-  const VOLUME_ICONS = ['🔈', '🔉', '🔊'];
-  const VOLUME_LABELS = ['50%', '100%', '150%'];
-  let volumeIdx = 1;
 
   window.toggleMute = function() {
     if (!localStream) return;
     const track = localStream.getAudioTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
-    const isMuted = !track.enabled;
+    const muted = !track.enabled;
     const btn = document.getElementById('muteBtn');
     const lbl = document.getElementById('muteLbl');
-    if (btn) {
-      btn.textContent = isMuted ? '🔇' : '🎤';
-      btn.classList.toggle('muted', isMuted);
-    }
-    if (lbl) lbl.textContent = isMuted ? 'Unmute' : 'Mute';
-    document.getElementById('vpa-me')?.classList.toggle('speaking', !isMuted);
+    if (btn) { btn.textContent = muted ? '🔇' : '🎤'; btn.classList.toggle('muted', muted); }
+    if (lbl) lbl.textContent = muted ? 'Unmute' : 'Mute';
+    document.getElementById('vpa-me')?.classList.toggle('speaking', !muted);
   };
 
   window.toggleDeafen = function() {
     isDeafened = !isDeafened;
-    // Mute/unmute all incoming audio elements
-    document.querySelectorAll('audio[id^="audio-"]').forEach(a => {
-      a.muted = isDeafened;
-    });
-    // Also mute our own mic when deafened (standard behaviour)
-    if (localStream) {
-      const track = localStream.getAudioTracks()[0];
-      if (track) track.enabled = !isDeafened;
-    }
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.muted = isDeafened);
+    if (localStream) { const t = localStream.getAudioTracks()[0]; if (t) t.enabled = !isDeafened; }
     const btn = document.getElementById('deafenBtn');
     const lbl = document.getElementById('deafenLbl');
     const muteBtn = document.getElementById('muteBtn');
     const muteLbl = document.getElementById('muteLbl');
-    if (btn) {
-      btn.textContent = isDeafened ? '🔇' : '🔊';
-      btn.classList.toggle('active', isDeafened);
-    }
+    if (btn) { btn.textContent = isDeafened ? '🔇' : '🔊'; btn.classList.toggle('active', isDeafened); }
     if (lbl) lbl.textContent = isDeafened ? 'Undeafen' : 'Deafen';
-    if (muteBtn) {
-      muteBtn.textContent = isDeafened ? '🔇' : '🎤';
-      muteBtn.classList.toggle('muted', isDeafened);
-    }
+    if (muteBtn) { muteBtn.textContent = isDeafened ? '🔇' : '🎤'; muteBtn.classList.toggle('muted', isDeafened); }
     if (muteLbl) muteLbl.textContent = isDeafened ? 'Unmute' : 'Mute';
   };
 
   window.cycleVolume = function() {
     volumeIdx = (volumeIdx + 1) % VOLUME_LEVELS.length;
-    const vol = VOLUME_LEVELS[volumeIdx];
-    // Apply to all incoming audio
-    document.querySelectorAll('audio[id^="audio-"]').forEach(a => {
-      a.volume = Math.min(vol, 1); // clamp to 1 for safety
-    });
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.volume = Math.min(VOLUME_LEVELS[volumeIdx], 1));
     const btn = document.getElementById('volBtn');
     const lbl = document.getElementById('volLbl');
     if (btn) btn.textContent = VOLUME_ICONS[volumeIdx];
@@ -3111,27 +2641,19 @@
     showToast('Volume: ' + VOLUME_LABELS[volumeIdx]);
   };
 
-  // ── SCREEN SHARING ────────────────────────────────────────────────────────
+  // ── SCREEN SHARING ───────────────────────────────────────────────────────
   let screenStream = null;
-  let screenCalls = {};   // peerId -> MediaConnection for screen
 
   window.toggleScreenShare = async function() {
-    if (screenStream) {
-      stopScreenShare();
-      return;
-    }
-
+    if (screenStream) { stopScreenShare(); return; }
     try {
       screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 30, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false  // system audio requires extra permission, skip for now
+        video: { frameRate: 30, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
       });
     } catch(e) {
-      if (e.name !== 'NotAllowedError') showToast('Screen sharing not available in this browser');
+      if (e.name !== 'NotAllowedError') showToast('Screen sharing unavailable');
       return;
     }
-
-    // Show local preview
     const vid = document.getElementById('screenVideo');
     const container = document.getElementById('screenshareContainer');
     if (vid && container) {
@@ -3140,81 +2662,30 @@
       container.classList.add('active');
       document.getElementById('screenshareWho').textContent = (currentProfile?.name || 'You') + ' is sharing';
     }
-
-    // Send screen video to all peers
-    Object.keys(voiceCalls).forEach(peerId => {
-      if (!myPeer) return;
-      const call = myPeer.call(peerId, screenStream, { metadata: { type: 'screen', name: currentProfile?.name || 'Member' } });
-      if (call) {
-        screenCalls[peerId] = call;
-        call.on('close', () => { delete screenCalls[peerId]; });
-      }
+    // Add video track to all peer connections
+    Object.entries(myPeerConns).forEach(([uid, pc]) => {
+      const vt = screenStream.getVideoTracks()[0];
+      if (!vt) return;
+      const existingSender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (existingSender) existingSender.replaceTrack(vt);
+      else pc.addTrack(vt, screenStream);
     });
-
-    // Update button
     const btn = document.getElementById('shareBtn');
-    if (btn) {
-      btn.textContent = '🔴 Stop Sharing';
-      btn.style.background = 'rgba(224,92,92,0.15)';
-      btn.style.color = 'var(--error)';
-      btn.style.borderColor = 'rgba(224,92,92,0.3)';
-    }
-
-    // Auto-stop if user closes the browser share dialog
-    screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
+    if (btn) { btn.textContent = '🔴'; btn.classList.add('sharing'); }
+    screenStream.getVideoTracks()[0].onended = stopScreenShare;
     showToast('Screen sharing started');
   };
 
   function stopScreenShare() {
-    if (screenStream) {
-      screenStream.getTracks().forEach(t => t.stop());
-      screenStream = null;
-    }
-    Object.values(screenCalls).forEach(c => { try { c.close(); } catch(e) {} });
-    Object.assign(screenCalls, {});
-
+    if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
     const container = document.getElementById('screenshareContainer');
     const vid = document.getElementById('screenVideo');
     if (container) container.classList.remove('active');
     if (vid) vid.srcObject = null;
-
     const btn = document.getElementById('shareBtn');
-    if (btn) {
-      btn.textContent = '🖥️ Share Screen';
-      btn.style.background = 'linear-gradient(135deg,var(--surface3),var(--surface2))';
-      btn.style.color = 'var(--text)';
-      btn.style.borderColor = 'var(--border2)';
-    }
+    if (btn) { btn.textContent = '🖥️'; btn.classList.remove('sharing'); }
     showToast('Screen sharing stopped');
   }
-
-  window.leaveVoice = async function() {
-    voiceInRoom = false;
-    // Close all calls
-    Object.values(voiceCalls).forEach(c => { try { c.close(); } catch(e) {} });
-    Object.assign(voiceCalls, {});
-    voicePeerNames = {};
-    // Stop mic
-    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-    // Destroy peer
-    if (myPeer) { myPeer.destroy(); myPeer = null; }
-    // Remove all audio elements
-    document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.remove());
-    // Stop presence listener
-    if (voiceRoomUnsub) { voiceRoomUnsub(); voiceRoomUnsub = null; }
-    // Remove from Firestore presence
-    if (currentChannel?.id) await leaveRoomPresence(currentChannel.id);
-    // Reset UI
-    // Stop screen share if active
-    if (screenStream) stopScreenShare();
-    Object.values(screenCalls).forEach(c => { try { c.close(); } catch(e) {} });
-    Object.assign(screenCalls, {});
-
-    document.getElementById('voiceParticipants').innerHTML = '';
-    document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
-    document.getElementById('voiceBtns').innerHTML = `<button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>`;
-    showToast('Left voice room');
-  };
 
   // ===== SETTINGS =====
   window.openEditModal = function() {
@@ -3224,9 +2695,7 @@
     document.getElementById('editModal').classList.add('open');
   };
 
-  window.closeEditModal = function() {
-    document.getElementById('editModal').classList.remove('open');
-  };
+  window.closeEditModal = function() { document.getElementById('editModal').classList.remove('open'); };
 
   window.saveProfile = async function() {
     const name = document.getElementById('editName').value.trim();
@@ -3235,13 +2704,9 @@
     if (!name) { showToast('Name cannot be empty'); return; }
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), { name, username, bio });
-      currentProfile.name = name;
-      currentProfile.username = username;
-      currentProfile.bio = bio;
+      currentProfile.name = name; currentProfile.username = username; currentProfile.bio = bio;
       await updateProfile(currentUser, { displayName: name });
-      closeEditModal();
-      updateUserBar();
-      showToast('Profile saved!');
+      closeEditModal(); updateUserBar(); showToast('Profile saved!');
     } catch(e) { showToast('Could not save profile'); }
   };
 
@@ -3258,23 +2723,16 @@
 
   window.togglePref = async function(btn, pref) {
     const on = btn.classList.toggle('on');
-    const update = {};
-    update[pref] = on;
-    try {
-      await updateDoc(doc(db, 'users', currentUser.uid), update);
-      currentProfile[pref] = on;
-    } catch(e) {}
+    const update = {}; update[pref] = on;
+    try { await updateDoc(doc(db, 'users', currentUser.uid), update); currentProfile[pref] = on; } catch(e) {}
   };
 
   window.applyVerification = async function() {
     try {
       await addDoc(collection(db, 'verificationRequests'), {
-        uid: currentUser.uid,
-        name: currentProfile.name,
-        username: currentProfile.username,
-        email: currentProfile.email,
-        requestedAt: serverTimestamp(),
-        status: 'pending'
+        uid: currentUser.uid, name: currentProfile.name,
+        username: currentProfile.username, email: currentProfile.email,
+        requestedAt: serverTimestamp(), status: 'pending'
       });
       document.getElementById('verifyBtn').textContent = 'Pending';
       document.getElementById('verifyBtn').disabled = true;
@@ -3284,7 +2742,6 @@
 
   window.handleSignOut = async function() {
     if (!confirm('Sign out?')) return;
-    // Clean up voice if in a call
     if (voiceInRoom) await leaveVoice();
     await signOut(auth);
     window.location.href = 'auth.html';
@@ -3292,10 +2749,7 @@
 
   // ===== INPUT =====
   window.handleInputKey = function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   window.autoResize = function(el) {
@@ -3303,15 +2757,11 @@
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   };
 
-  window.triggerFileUpload = function() {
-    document.getElementById('fileInput').click();
-  };
-
+  window.triggerFileUpload = function() { document.getElementById('fileInput').click(); };
   window.handleFileUpload = function(e) {
     const files = e.target.files;
     if (!files.length) return;
-    const names = Array.from(files).map(f=>f.name).join(', ');
-    showToast(`File sharing coming soon: ${names}`);
+    showToast('File sharing coming soon: ' + Array.from(files).map(f=>f.name).join(', '));
   };
 
   // ===== EMOJI =====
@@ -3340,7 +2790,7 @@
     if (picker.classList.contains('open')) {
       const rect = e.currentTarget.getBoundingClientRect();
       picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-      picker.style.right = (window.innerWidth - rect.right) + 'px';
+      picker.style.right  = (window.innerWidth - rect.right) + 'px';
     }
   };
 
@@ -3359,15 +2809,13 @@
   async function dailyLogin() {
     try {
       const key = `gp_daily_${currentUser.uid}`;
-      const last = localStorage.getItem(key);
       const today = new Date().toDateString();
-      if (last !== today) {
+      if (localStorage.getItem(key) !== today) {
         localStorage.setItem(key, today);
         await awardPoints(currentUser.uid, 2);
       }
     } catch(e) {}
   }
-
   setTimeout(dailyLogin, 2000);
 </script>
 
