@@ -1270,15 +1270,17 @@
       else if (track.kind === 'video') attachVideo(remoteUid, streams[0]);
     };
 
-    // Perfect negotiation: trigger offer when needed
+    // Perfect negotiation: browser fires this when we need to send an offer
     pc.onnegotiationneeded = async () => {
       try {
+        if (peer.makingOffer) return; // already negotiating
         peer.makingOffer = true;
-        await pc.setLocalDescription();
+        console.log(`[Voice] onnegotiationneeded → sending offer to ${remoteUid}`);
+        await pc.setLocalDescription(); // implicitly creates offer
         await sendSignal(remoteUid, { type: pc.localDescription.type, sdp: pc.localDescription.sdp });
-        console.log(`[Voice] Sent ${pc.localDescription.type} to ${remoteUid}`);
+        console.log(`[Voice] ✅ Offer sent to ${remoteUid}`);
       } catch(e) {
-        console.warn('[Voice] onnegotiationneeded error:', e.message);
+        console.warn(`[Voice] onnegotiationneeded error for ${remoteUid}:`, e.message);
       } finally {
         peer.makingOffer = false;
       }
@@ -1334,75 +1336,92 @@
   }
 
   // ── Signaling: handle incoming signal ───────────────────────────────────
+  // Perfect Negotiation (RFC 8829):
+  //   impolite peer: higher UID — ignores COLLIDING OFFERS only, always accepts answers
+  //   polite peer:   lower UID  — rolls back its own offer to accept incoming offers
   async function handleSignal(data) {
     const remoteUid = data.from;
 
-    // Drop stale signals from before we joined
+    // Drop stale signals from before we joined this session
     if (data.ts && data.ts < voiceJoinedAt) {
-      console.log('[Voice] Dropping stale signal from', remoteUid, '(before join)');
+      console.log('[Voice] Dropping stale signal from', remoteUid, '(ts:', data.ts, '< joined:', voiceJoinedAt, ')');
       return;
     }
 
-    // Create peer on first contact if needed
+    // Create peer on first contact
     if (!peerConns[remoteUid]) {
       createPeer(remoteUid);
       addParticipantUI(remoteUid);
     }
 
     const peer = peerConns[remoteUid];
-    if (!peer) return; // peer may have been removed mid-flight
+    if (!peer) return;
     const { pc } = peer;
 
-    // Drop signals for closed/failed connections
-    if (pc.connectionState === 'closed' || pc.connectionState === 'failed') {
-      console.log('[Voice] Dropping signal — connection already closed for', remoteUid);
+    if (pc.connectionState === 'closed') {
+      console.log('[Voice] Dropping signal — pc closed for', remoteUid);
       return;
     }
 
+    console.log(`[Voice] Signal from ${remoteUid}: type=${data.type} sigState=${pc.signalingState} makingOffer=${peer.makingOffer} polite=${peer.isPolite}`);
+
     try {
-      if (data.type === 'offer' || data.type === 'answer') {
-        const offerCollision = data.type === 'offer' && (peer.makingOffer || pc.signalingState !== 'stable');
-        peer.ignoreOffer = !peer.isPolite && offerCollision;
-        if (peer.ignoreOffer) {
-          console.log(`[Voice] Ignoring colliding offer from ${remoteUid} (impolite)`);
+      if (data.type === 'offer') {
+        const collision = peer.makingOffer || pc.signalingState !== 'stable';
+
+        if (collision && !peer.isPolite) {
+          // Impolite peer: ignore the incoming offer — our own offer takes priority
+          console.log(`[Voice] Impolite: ignoring colliding offer from ${remoteUid}, staying with our offer`);
           return;
         }
-        if (offerCollision && peer.isPolite) {
-          // Polite peer: rollback own offer so we can accept theirs
-          // Use RTCSessionDescription rollback — supported in all modern browsers
-          console.log(`[Voice] Offer collision — rolling back (polite)`);
+
+        if (collision && peer.isPolite) {
+          // Polite peer: abandon our offer and accept theirs instead
+          console.log(`[Voice] Polite: rolling back to accept offer from ${remoteUid}`);
           await pc.setLocalDescription({ type: 'rollback' });
+          peer.makingOffer = false;
         }
-        await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
-        if (data.type === 'offer') {
-          await pc.setLocalDescription();
-          await sendSignal(remoteUid, { type: pc.localDescription.type, sdp: pc.localDescription.sdp });
-          console.log(`[Voice] Answered offer from ${remoteUid}`);
+
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: data.sdp }));
+        await pc.setLocalDescription(); // creates answer
+        await sendSignal(remoteUid, { type: pc.localDescription.type, sdp: pc.localDescription.sdp });
+        console.log(`[Voice] ✅ Sent answer to ${remoteUid}`);
+
+      } else if (data.type === 'answer') {
+        // Answers are NEVER ignored — impolite peer always accepts the answer to its offer
+        if (pc.signalingState !== 'have-local-offer') {
+          console.log(`[Voice] Dropping answer from ${remoteUid} — not in have-local-offer state (${pc.signalingState})`);
+          return;
         }
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: data.sdp }));
+        console.log(`[Voice] ✅ Got answer from ${remoteUid} — ICE should start`);
+
       } else if (data.type === 'candidate' && data.candidate) {
-        // Only add candidates once remote description is set
         if (!pc.remoteDescription) {
-          console.log('[Voice] Queuing early candidate from', remoteUid);
+          // Queue candidates until remote description is set
           peer.pendingCandidates = peer.pendingCandidates || [];
           peer.pendingCandidates.push(data.candidate);
+          console.log(`[Voice] Queued candidate from ${remoteUid} (${peer.pendingCandidates.length} pending)`);
           return;
         }
         try {
           await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
         } catch(e) {
-          if (!peer.ignoreOffer) console.warn('[Voice] addIceCandidate:', e.message);
+          console.warn('[Voice] addIceCandidate error:', e.message);
         }
       }
-      // After setting remote description, drain any pending candidates
+
+      // Drain pending candidates after remote description is set
       if ((data.type === 'offer' || data.type === 'answer') && peer.pendingCandidates?.length) {
-        console.log(`[Voice] Draining ${peer.pendingCandidates.length} queued candidates for ${remoteUid}`);
+        console.log(`[Voice] Draining ${peer.pendingCandidates.length} pending candidates for ${remoteUid}`);
         for (const c of peer.pendingCandidates) {
           try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
         }
         peer.pendingCandidates = [];
       }
+
     } catch(e) {
-      console.warn('[Voice] handleSignal error:', e.message, '| sigState:', pc.signalingState, '| type:', data.type);
+      console.warn(`[Voice] handleSignal error: ${e.message} | type=${data.type} sigState=${pc.signalingState}`);
     }
   }
 
