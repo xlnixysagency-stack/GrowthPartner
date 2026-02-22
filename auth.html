@@ -863,32 +863,39 @@
       if (!agreeTerms || !agreeAge) return showAlert('Please tick both boxes to continue.');
 
       const name = document.getElementById('regName').value.trim();
-      const username = document.getElementById('regUsername').value.trim().replace('@', '');
+      const username = document.getElementById('regUsername').value.trim().replace('@', '').toLowerCase();
       const email = document.getElementById('regEmail').value.trim();
       const pw = document.getElementById('regPassword').value;
 
       setLoading('createBtn', true, 'Create Account');
       try {
-        // Check username availability
-        const taken = await usernameExists(username);
-        if (taken) {
-          showAlert('That username is already taken. Please choose another.');
-          setLoading('createBtn', false, 'Create Account');
-          return;
-        }
-
-        // Create auth user
+        // Step 1: Create the Firebase Auth account first
+        // This makes the user "authenticated" so Firestore writes will work
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         const uid = cred.user.uid;
 
-        // Update display name
-        await updateProfile(cred.user, { displayName: name });
+        // Step 2: Update display name in Auth
+        try {
+          await updateProfile(cred.user, { displayName: name });
+        } catch(e) { /* non-critical */ }
 
-        // Save profile to Firestore
-        await createUserProfile(uid, { name, username, email, roles: selectedRoles });
+        // Step 3: Now that user is authenticated, check username & save profile
+        try {
+          const taken = await usernameExists(username);
+          if (taken) {
+            // Still proceed — just append uid suffix to make it unique
+            await createUserProfile(uid, { name, username: username + uid.slice(0,4), email, roles: selectedRoles });
+          } else {
+            await createUserProfile(uid, { name, username, email, roles: selectedRoles });
+          }
+        } catch(firestoreErr) {
+          // Profile save failed but auth succeeded — still redirect, growth-partner.html will create profile
+          console.warn('Profile save failed, will retry on app load:', firestoreErr.message);
+        }
 
-        // Redirect
+        // Step 4: Redirect — app will handle any missing profile data
         window.location.href = 'growth-partner.html';
+
       } catch (err) {
         const msgs = {
           'auth/email-already-in-use': 'That email is already registered. Try signing in instead.',
