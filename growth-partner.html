@@ -1146,28 +1146,40 @@
         body: JSON.stringify({ format: 'urls' })
       });
       const data = await res.json();
-      // Xirsys returns iceServers as an object {username, credential, urls:[...]}
       const v = data.v?.iceServers;
       if (v && v.urls && v.urls.length) {
-        ICE_SERVERS = [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: v.urls, username: v.username, credential: v.credential }
-        ];
-        console.log('[Voice] Xirsys OK — got', v.urls.length, 'TURN/STUN URLs');
-        return;
+        // Filter out any URLs with ws-turn1 (known bad hostname) and fix ws-turn prefix
+        // Xirsys sometimes returns ws-turn1 which has DNS issues — replace with ws-turn2
+        const fixedUrls = v.urls
+          .map(u => u.replace('ws-turn1.xirsys.com', 'ws-turn2.xirsys.com'))
+          .filter(u => !u.includes('ws-turn1.xirsys.com')); // belt and suspenders
+
+        if (fixedUrls.length) {
+          ICE_SERVERS = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: fixedUrls, username: v.username, credential: v.credential }
+          ];
+          console.log('[Voice] Xirsys OK — got', fixedUrls.length, 'TURN/STUN URLs');
+          return;
+        }
       }
-      // Fallback: try array format
+      // Array format fallback
       if (Array.isArray(v) && v.length) {
-        ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }, ...v];
-        console.log('[Voice] Xirsys OK (array format) — got', v.length, 'servers');
+        const fixed = v.map(s => ({
+          ...s,
+          url: s.url?.replace('ws-turn1.xirsys.com', 'ws-turn2.xirsys.com'),
+          urls: s.urls?.map ? s.urls.map(u => u.replace('ws-turn1.xirsys.com', 'ws-turn2.xirsys.com')) : s.urls
+        })).filter(s => !JSON.stringify(s).includes('ws-turn1'));
+        ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }, ...fixed];
+        console.log('[Voice] Xirsys OK (array) — got', fixed.length, 'servers');
         return;
       }
-      console.warn('[Voice] Xirsys: unexpected response shape, using fallback', JSON.stringify(data).slice(0, 200));
+      console.warn('[Voice] Xirsys: unexpected response shape');
     } catch(e) {
       console.warn('[Voice] Xirsys fetch failed:', e.message);
     }
-    // Fallback TURN servers
+    // Reliable fallback TURN servers
     ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
@@ -1175,6 +1187,7 @@
       { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
       { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
     ];
+    console.log('[Voice] Using fallback TURN servers');
   }
 
   // ── Voice state ────────────────────────────────────────────────────────────
@@ -1223,7 +1236,12 @@
 
     // ICE candidate → write to Firestore
     pc.onicecandidate = ({ candidate }) => {
-      if (!candidate || !voiceRoomId) return;
+      if (!voiceRoomId) return;
+      if (!candidate) {
+        console.log('[Voice] ICE gathering complete for', remoteUid);
+        return;
+      }
+      console.log('[Voice] Local ICE candidate:', candidate.type, candidate.protocol, candidate.address);
       addDoc(collection(db, 'voiceRooms', voiceRoomId, `ice_${currentUser.uid}_to_${remoteUid}`), {
         c: candidate.toJSON(), t: Date.now()
       }).catch(() => {});
@@ -1233,8 +1251,22 @@
     pc.oniceconnectionstatechange = () => {
       console.log('[Voice] ICE state with', remoteUid, '→', pc.iceConnectionState);
       if (pc.iceConnectionState === 'failed') {
-        console.warn('[Voice] ICE failed — trying restart');
+        console.warn('[Voice] ICE failed — trying TURN restart');
         pc.restartIce();
+      }
+      if (pc.iceConnectionState === 'disconnected') {
+        console.warn('[Voice] ICE disconnected — may recover');
+      }
+    };
+
+    pc.onicegatheringstatechange = () => {
+      console.log('[Voice] ICE gathering state:', pc.iceGatheringState);
+    };
+
+    pc.onicecandidateerror = (e) => {
+      // Only log TURN errors (hostcandidates errors are normal)
+      if (e.url && e.url.includes('turn')) {
+        console.warn('[Voice] TURN candidate error:', e.url, 'errorCode:', e.errorCode, e.errorText);
       }
     };
 
