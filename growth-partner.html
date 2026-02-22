@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Growth Partner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0C0C0E;
+      --surface: #131318;
+      --surface2: #1C1C24;
+      --surface3: #242430;
+      --border: #2a2a35;
+      --border2: #353545;
+      --text: #EDEAE4;
+      --text2: #b8b4ae;
+      --muted: #7a7680;
+      --gold: #C9A84C;
+      --gold-dim: #6B6040;
+      --gold-glow: rgba(201,168,76,0.12);
+      --error: #e05c5c;
+      --success: #52c47a;
+      --online: #52c47a;
+      --idle: #e0a050;
+      --offline: #555;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== LOADING SCREEN ===== */
+    #loadingScreen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+    }
+
+    .load-logo {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 40px rgba(201,168,76,0.3);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse { 0%,100%{box-shadow:0 0 40px rgba(201,168,76,0.3)} 50%{box-shadow:0 0 60px rgba(201,168,76,0.5)} }
+
+    .load-logo svg { width: 28px; height: 28px; fill: none; stroke: #0C0C0E; stroke-width: 2; }
+    #loadingScreen p { font-size: 13px; color: var(--muted); letter-spacing: 0.5px; }
+
+    /* ===== APP LAYOUT ===== */
+    #app { display: none; height: 100vh; flex-direction: column; }
+    #app.ready { display: flex; }
+
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 16px rgba(201,168,76,0.25);
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo svg { width: 16px; height: 16px; fill: none; stroke: #0C0C0E; stroke-width: 2.5; }
+
+    .sidebar-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px; font-weight: 600;
+      color: var(--text); letter-spacing: 0.3px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .sidebar-nav::-webkit-scrollbar { width: 3px; }
+    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .channel-category {
+      padding: 14px 12px 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .category-arrow {
+      margin-left: auto;
+      transition: transform 0.2s;
+      opacity: 0.5;
+    }
+
+    .category-arrow.collapsed { transform: rotate(-90deg); }
+
+    .channel-group { overflow: hidden; }
+    .channel-group.collapsed .channel-item { display: none; }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      margin: 1px 6px;
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 400;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .channel-item:hover { background: var(--surface2); color: var(--text2); }
+
+    .channel-item.active {
+      background: var(--gold-glow);
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    .channel-item.active::before {
+      content: '';
+      position: absolute;
+      left: -6px; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 60%;
+      background: var(--gold);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .channel-icon {
+      font-size: 13px;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .channel-badge {
+      margin-left: auto;
+      background: var(--gold);
+      color: #0C0C0E;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .voice-indicator {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .voice-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--online);
+    }
+
+    /* User bar */
+    .user-bar {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #0C0C0E;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .avatar-status {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      background: var(--online);
+    }
+
+    .user-info { flex: 1; overflow: hidden; }
+
+    .user-name {
+      font-size: 13px; font-weight: 600;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .user-rank {
+      font-size: 11px;
+      color: var(--gold);
+    }
+
+    .user-bar-actions {
+      display: flex; gap: 4px;
+    }
+
+    .icon-btn {
+      width: 28px; height: 28px;
+      background: none; border: none;
+      color: var(--muted);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Channel header */
+    .channel-header {
+      padding: 0 20px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .hamburger {
+      display: none;
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+    }
+
+    .hamburger:hover { color: var(--text); }
+    .hamburger svg { width: 20px; height: 20px; }
+
+    .ch-icon { font-size: 16px; }
+    .ch-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .ch-desc { font-size: 12px; color: var(--muted); margin-left: 4px; display: none; }
+
+    .header-actions { margin-left: auto; display: flex; gap: 6px; }
+
+    /* Messages area */
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 20px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages-area::-webkit-scrollbar { width: 4px; }
+    .messages-area::-webkit-scrollbar-track { background: transparent; }
+    .messages-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* Welcome block */
+    .channel-welcome {
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .welcome-icon {
+      width: 60px; height: 60px;
+      background: var(--surface2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+
+    .welcome-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px; font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+
+    .welcome-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Message groups */
+    .msg-group { margin-bottom: 2px; }
+
+    .msg-group:hover .msg-actions { opacity: 1; }
+
+    .msg-row {
+      display: flex;
+      gap: 12px;
+      padding: 3px 0;
+      border-radius: 8px;
+      transition: background 0.1s;
+      position: relative;
+    }
+
+    .msg-row:hover { background: var(--surface2); padding-left: 6px; padding-right: 6px; margin: 0 -6px; }
+
+    .msg-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #0C0C0E;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .msg-body { flex: 1; min-width: 0; }
+
+    .msg-meta {
+      display: flex; align-items: baseline; gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .msg-author {
+      font-size: 14px; font-weight: 600; color: var(--text);
+    }
+
+    .msg-author.admin-name { color: var(--gold); }
+
+    .msg-time {
+      font-size: 11px; color: var(--muted);
+    }
+
+    .msg-rank-badge {
+      font-size: 10px; font-weight: 600;
+      padding: 1px 6px; border-radius: 4px;
+      background: var(--surface3);
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+    }
+
+    .msg-text {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .msg-text .mention {
+      color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      padding: 0 3px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .msg-continuation {
+      padding: 2px 0 2px 48px;
+      position: relative;
+    }
+
+    .msg-continuation:hover .msg-hover-time {
+      opacity: 1;
+    }
+
+    .msg-hover-time {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px; color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.15s;
+      width: 42px; text-align: center;
+    }
+
+    .msg-actions {
+      position: absolute;
+      right: 8px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .msg-action-btn {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      padding: 3px 5px; border-radius: 4px;
+      font-size: 12px;
+      transition: all 0.1s;
+    }
+
+    .msg-action-btn:hover { background: var(--surface3); color: var(--text); }
+
+    .pinned-indicator {
+      font-size: 11px; color: var(--gold);
+      margin-bottom: 2px;
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    /* System messages */
+    .system-msg {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .system-msg::before, .system-msg::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Date divider */
+    .date-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 16px 0;
+      font-size: 11px; color: var(--muted);
+      font-weight: 500; letter-spacing: 0.5px;
+    }
+
+    .date-divider::before, .date-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Pinned message bar */
+    .pinned-bar {
+      padding: 8px 16px;
+      background: rgba(201,168,76,0.06);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--text2);
+      cursor: pointer;
+      display: none;
+    }
+
+    .pinned-bar.visible { display: flex; }
+    .pinned-pin { font-size: 14px; }
+    .pinned-content { flex: 1; }
+    .pinned-label { font-size: 10px; color: var(--gold); font-weight: 600; letter-spacing: 0.5px; }
+
+    /* Message input */
+    .input-area {
+      padding: 12px 20px 16px;
+      flex-shrink: 0;
+    }
+
+    .input-wrapper {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 14px;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrapper:focus-within { border-color: var(--gold-dim); }
+
+    .msg-input {
+      flex: 1;
+      background: none; border: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      max-height: 120px;
+      min-height: 22px;
+      line-height: 1.5;
+    }
+
+    .msg-input::placeholder { color: var(--muted); }
+
+    .input-actions {
+      display: flex; gap: 4px; align-items: center;
+    }
+
+    .input-btn {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      padding: 4px; border-radius: 6px;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .input-btn:hover { color: var(--gold); }
+    .input-btn svg { width: 18px; height: 18px; }
+
+    .send-btn {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border: none; color: #0C0C0E;
+      width: 32px; height: 32px;
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover { opacity: 0.85; }
+    .send-btn svg { width: 16px; height: 16px; }
+
+    /* Cannot post notice */
+    .read-only-bar {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ===== VOICE ROOM VIEW ===== */
+    .voice-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .voice-lobby {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .voice-room-icon {
+      width: 80px; height: 80px;
+      background: var(--surface2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      border: 2px solid var(--border2);
+    }
+
+    .voice-room-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px; font-weight: 600;
+      color: var(--text);
+    }
+
+    .voice-room-sub { font-size: 14px; color: var(--muted); max-width: 320px; line-height: 1.6; }
+
+    .voice-participants {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      max-width: 400px;
+    }
+
+    .voice-participant {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+
+    .vp-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 600; color: #0C0C0E;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .vp-avatar.speaking { border-color: var(--online); box-shadow: 0 0 12px rgba(82,196,122,0.3); }
+    .vp-name { font-size: 11px; color: var(--text2); text-align: center; }
+
+    .join-voice-btn {
+      padding: 14px 40px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      color: #0C0C0E;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .join-voice-btn:hover { opacity: 0.85; }
+    .join-voice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .leave-voice-btn {
+      padding: 11px 28px;
+      background: rgba(224,92,92,0.15);
+      color: var(--error);
+      border: 1px solid rgba(224,92,92,0.3);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .leave-voice-btn:hover { background: rgba(224,92,92,0.25); }
+
+    .daily-frame-container {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .daily-frame-container.active { display: flex; }
+
+    .daily-frame-header {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .daily-frame-header .room-label {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      flex: 1;
+    }
+
+    .daily-frame-header .live-badge {
+      background: rgba(82,196,122,0.15);
+      border: 1px solid rgba(82,196,122,0.3);
+      color: var(--online);
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: 20px;
+      letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--online);
+      animation: livePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    #dailyIframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .api-key-notice {
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 360px;
+      text-align: left;
+    }
+
+    .api-key-notice strong { color: var(--gold); }
+    .api-key-notice code {
+      background: var(--surface3);
+      padding: 1px 6px; border-radius: 4px;
+      font-size: 12px; color: var(--text);
+      font-family: monospace;
+    }
+
+    /* ===== RIGHT PANEL ===== */
+    .right-panel {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+
+    .right-panel::-webkit-scrollbar { width: 3px; }
+    .right-panel::-webkit-scrollbar-track { background: transparent; }
+    .right-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .members-section { margin-bottom: 16px; }
+
+    .members-category {
+      padding: 0 12px 6px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1.2px; color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .member-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin: 1px 4px;
+    }
+
+    .member-item:hover { background: var(--surface2); }
+
+    .member-av {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: #0C0C0E;
+      position: relative; flex-shrink: 0;
+    }
+
+    .member-av-status {
+      position: absolute; bottom: 0; right: 0;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+    }
+
+    .member-info { flex: 1; min-width: 0; }
+
+    .member-name {
+      font-size: 13px; font-weight: 500;
+      color: var(--text2);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .member-role {
+      font-size: 10px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ===== DIRECTORY VIEW ===== */
+    .view-container {
+      flex: 1; overflow-y: auto; padding: 24px;
+    }
+
+    .view-container::-webkit-scrollbar { width: 4px; }
+    .view-container::-webkit-scrollbar-track { background: transparent; }
+    .view-container::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .view-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px; font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+
+    .view-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    .search-bar svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+
+    .search-bar input {
+      flex: 1; background: none; border: none;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 14px; outline: none;
+    }
+
+    .search-bar input::placeholder { color: var(--muted); }
+
+    .filter-chips {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .chip {
+      padding: 5px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .chip:hover { border-color: var(--gold-dim); color: var(--text2); }
+    .chip.active { background: var(--gold-glow); border-color: var(--gold); color: var(--gold); }
+
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .member-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .member-card:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .card-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 600; color: #0C0C0E;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .card-status-dot {
+      position: absolute; bottom: 1px; right: 1px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--surface2);
+    }
+
+    .card-name {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      margin-bottom: 3px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .verified-badge {
+      width: 14px; height: 14px; color: #4A9EBF;
+      flex-shrink: 0;
+    }
+
+    .card-rank {
+      font-size: 11px; color: var(--gold); font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .card-roles {
+      display: flex; gap: 4px; flex-wrap: wrap;
+    }
+
+    .role-tag {
+      font-size: 10px; font-weight: 500;
+      padding: 2px 8px; border-radius: 4px;
+      background: var(--surface3);
+      color: var(--text2);
+      border: 1px solid var(--border2);
+    }
+
+    /* ===== LEADERBOARD ===== */
+    .podium {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 12px; margin-bottom: 32px;
+    }
+
+    .podium-place {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px;
+    }
+
+    .podium-av {
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #0C0C0E;
+      position: relative;
+    }
+
+    .podium-place:nth-child(1) .podium-av {
+      width: 64px; height: 64px; font-size: 22px;
+      background: linear-gradient(135deg, #C9A84C, #f0c96e);
+      box-shadow: 0 0 24px rgba(201,168,76,0.4);
+    }
+
+    .podium-place:nth-child(2) .podium-av, .podium-place:nth-child(3) .podium-av {
+      width: 52px; height: 52px; font-size: 18px;
+    }
+
+    .podium-place:nth-child(2) .podium-av { background: linear-gradient(135deg, #8a8a8a, #c0c0c0); }
+    .podium-place:nth-child(3) .podium-av { background: linear-gradient(135deg, #7a4e2a, #cd7f32); }
+
+    .podium-crown {
+      position: absolute; top: -14px;
+      font-size: 16px;
+    }
+
+    .podium-name {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      text-align: center; max-width: 80px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .podium-pts { font-size: 11px; color: var(--muted); }
+
+    .podium-block {
+      border-radius: 8px 8px 0 0;
+      width: 72px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+    }
+
+    .podium-place:nth-child(1) .podium-block {
+      height: 60px;
+      background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--gold);
+    }
+
+    .podium-place:nth-child(2) .podium-block {
+      height: 44px;
+      background: rgba(192,192,192,0.08);
+      border: 1px solid rgba(192,192,192,0.2);
+      color: #c0c0c0;
+    }
+
+    .podium-place:nth-child(3) .podium-block {
+      height: 32px;
+      background: rgba(205,127,50,0.08);
+      border: 1px solid rgba(205,127,50,0.2);
+      color: #cd7f32;
+    }
+
+    .rank-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .rank-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: border-color 0.15s;
+    }
+
+    .rank-row:hover { border-color: var(--border2); }
+
+    .rank-row.me {
+      background: var(--gold-glow);
+      border-color: var(--gold-dim);
+    }
+
+    .rank-number {
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      width: 22px; text-align: center; flex-shrink: 0;
+    }
+
+    .rank-av {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #0C0C0E;
+      flex-shrink: 0;
+    }
+
+    .rank-info { flex: 1; min-width: 0; }
+
+    .rank-name {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .rank-role { font-size: 11px; color: var(--muted); }
+
+    .rank-pts {
+      font-size: 13px; font-weight: 600; color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    /* ===== SETTINGS VIEW ===== */
+    .settings-sections { max-width: 560px; }
+
+    .settings-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .settings-card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .settings-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row:hover { background: rgba(255,255,255,0.02); }
+
+    .settings-row-icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: var(--surface3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    .settings-row-info { flex: 1; }
+
+    .settings-row-label {
+      font-size: 14px; font-weight: 500; color: var(--text);
+    }
+
+    .settings-row-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .toggle {
+      width: 42px; height: 24px;
+      background: var(--border2);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      border: none;
+    }
+
+    .toggle.on { background: var(--gold); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .toggle.on::after { transform: translateX(18px); }
+
+    .settings-btn {
+      padding: 7px 16px;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--text2);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+
+    .settings-btn.danger {
+      color: var(--error);
+      border-color: rgba(224,92,92,0.3);
+      background: rgba(224,92,92,0.05);
+    }
+
+    .settings-btn.danger:hover { background: rgba(224,92,92,0.1); }
+
+    /* Profile card in settings */
+    .profile-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .profile-big-av {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 700; color: #0C0C0E;
+      flex-shrink: 0;
+    }
+
+    .profile-card-info { flex: 1; min-width: 0; }
+
+    .profile-card-name {
+      font-size: 18px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .profile-card-rank { font-size: 12px; color: var(--gold); margin-bottom: 8px; }
+
+    .profile-card-roles { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      width: 100%; max-width: 440px;
+      padding: 28px;
+      animation: fadeUp 0.25s ease;
+    }
+
+    .modal-title {
+      font-size: 18px; font-weight: 600; color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+
+    .modal-close {
+      float: right; background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 20px;
+      margin-top: -4px;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .modal-field { margin-bottom: 14px; }
+
+    .modal-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--muted); margin-bottom: 7px;
+      display: block;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      padding: 11px 13px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; outline: none;
+    }
+
+    .modal-input:focus { border-color: var(--gold-dim); }
+    .modal-input::placeholder { color: #4a4850; }
+
+    textarea.modal-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn-modal-cancel {
+      padding: 10px 18px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 9px; color: var(--text2);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-modal-save {
+      padding: 10px 22px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border: none; border-radius: 9px; color: #0C0C0E;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-modal-save:hover { opacity: 0.85; }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13px; color: var(--text);
+      z-index: 2000;
+      opacity: 0; transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== SIDEBAR OVERLAY (mobile) ===== */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.6);
+    }
+
+    /* ===== PROFILE POPUP ===== */
+    .profile-popup {
+      position: fixed; z-index: 500;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 20px;
+      width: 240px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      display: none;
+      animation: fadeUp 0.2s ease;
+    }
+
+    .profile-popup.open { display: block; }
+
+    .pp-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #0C0C0E;
+      margin-bottom: 12px;
+    }
+
+    .pp-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .pp-username { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .pp-rank { font-size: 11px; color: var(--gold); margin-bottom: 10px; }
+    .pp-bio { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
+
+    .pp-roles { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 14px; }
+
+    .pp-divider { height: 1px; background: var(--border); margin-bottom: 12px; }
+
+    .pp-actions { display: flex; gap: 8px; }
+
+    .pp-btn {
+      flex: 1; padding: 8px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text2);
+      font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; text-align: center;
+      transition: all 0.15s;
+    }
+
+    .pp-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    .pp-close {
+      position: absolute; top: 12px; right: 12px;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 16px; line-height: 1;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; left: 0; top: 0; bottom: 0;
+        z-index: 200; transform: translateX(-100%);
+      }
+
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .hamburger { display: flex; }
+      .right-panel { display: none; }
+      .ch-desc { display: none !important; }
+    }
+
+    @media (max-width: 900px) {
+      .right-panel { display: none; }
+    }
+
+    @media (min-width: 1100px) {
+      .ch-desc { display: block; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Emoji picker placeholder */
+    .emoji-picker-popup {
+      position: fixed; z-index: 600;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid; grid-template-columns: repeat(8, 1fr);
+      gap: 4px; width: 240px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      display: none;
+    }
+
+    .emoji-picker-popup.open { display: grid; }
+
+    .emoji-btn-item {
+      font-size: 20px; padding: 4px;
+      border-radius: 6px; cursor: pointer;
+      text-align: center; transition: background 0.1s;
+      background: none; border: none;
+    }
+
+    .emoji-btn-item:hover { background: var(--surface2); }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <div class="load-logo">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  </div>
+  <p>Loading Growth Partner...</p>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="app-body">
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span class="sidebar-title">Growth Partner</span>
+      </div>
+
+      <div class="sidebar-nav" id="sidebarNav">
+        <!-- Channels rendered by JS -->
+      </div>
+
+      <div class="user-bar" id="userBar">
+        <div class="user-avatar" id="userBarAvatar">
+          <div class="avatar-status" id="userStatusDot"></div>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="userBarName">Loading...</div>
+          <div class="user-rank" id="userBarRank"></div>
+        </div>
+        <div class="user-bar-actions">
+          <button class="icon-btn" title="Settings" onclick="switchView('settings')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content" id="mainContent">
+
+      <!-- Channel Header -->
+      <div class="channel-header" id="channelHeader">
+        <button class="hamburger" onclick="openSidebar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="ch-icon" id="chIcon">#</span>
+        <span class="ch-name" id="chName">announcements</span>
+        <span class="ch-desc" id="chDesc"></span>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="switchView('directory')" title="Directory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="icon-btn" onclick="switchView('leaderboard')" title="Leaderboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 20 18 10"/><polyline points="12 20 12 4"/><polyline points="6 20 6 14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pinned bar -->
+      <div class="pinned-bar" id="pinnedBar">
+        <span class="pinned-pin">📌</span>
+        <div class="pinned-content">
+          <div class="pinned-label">PINNED MESSAGE</div>
+          <div id="pinnedText" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        </div>
+      </div>
+
+      <!-- CHANNEL CHAT VIEW -->
+      <div id="chatView" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+        <div class="messages-area" id="messagesArea">
+          <!-- Messages loaded here -->
+        </div>
+        <div class="input-area" id="inputArea">
+          <div class="input-wrapper" id="inputWrapper">
+            <textarea class="msg-input" id="msgInput" placeholder="Message #channel" rows="1" onkeydown="handleInputKey(event)" oninput="autoResize(this)"></textarea>
+            <div class="input-actions">
+              <button class="input-btn" onclick="triggerFileUpload()" title="Attach file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="input-btn" id="emojiBtn" onclick="toggleEmojiPicker(event)" title="Emoji">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              <button class="send-btn" onclick="sendMessage()" title="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)" multiple>
+        </div>
+        <!-- Read-only overlay -->
+        <div class="input-area" id="readOnlyBar" style="display:none">
+          <div class="read-only-bar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            You don't have permission to post in this channel.
+          </div>
+        </div>
+      </div>
+
+      <!-- VOICE ROOM VIEW -->
+      <div id="voiceView" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+        <div class="voice-view" id="voiceLobby">
+          <div class="voice-lobby">
+            <div class="voice-room-icon" id="voiceRoomIcon">🎙️</div>
+            <div class="voice-room-title" id="voiceRoomTitle">Voice Room 1</div>
+            <div class="voice-room-sub" id="voiceRoomSub">Free audio calls · No setup needed</div>
+            <div class="voice-participants" id="voiceParticipants"></div>
+            <div id="voiceBtns">
+              <button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-top:-4px">Audio only · Peer-to-peer · Completely free</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIRECTORY VIEW -->
+      <div id="directoryView" style="display:none;flex:1;overflow:hidden;">
+        <div class="view-container">
+          <div class="view-title">Member Directory</div>
+          <div class="view-sub">Find collaborators by name or skill</div>
+          <div class="search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="dirSearch" placeholder="Search members..." oninput="filterDirectory()">
+          </div>
+          <div class="filter-chips" id="dirFilters">
+            <div class="chip active" onclick="setDirFilter('all',this)">All</div>
+            <div class="chip" onclick="setDirFilter('Development & AI',this)">Development & AI</div>
+            <div class="chip" onclick="setDirFilter('Design & Creative',this)">Design & Creative</div>
+            <div class="chip" onclick="setDirFilter('Sales & Marketing',this)">Sales & Marketing</div>
+            <div class="chip" onclick="setDirFilter('Writing & Content',this)">Writing & Content</div>
+            <div class="chip" onclick="setDirFilter('Strategy & Management',this)">Strategy & Management</div>
+          </div>
+          <div class="members-grid" id="directoryGrid"></div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD VIEW -->
+      <div id="leaderboardView" style="display:none;flex:1;overflow:hidden;">
+        <div class="view-container">
+          <div class="view-title">Leaderboard</div>
+          <div class="view-sub" id="lbResetText">Resets monthly · Earn points through activity</div>
+          <div class="podium" id="lbPodium"></div>
+          <div class="rank-list" id="lbList"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div id="settingsView" style="display:none;flex:1;overflow:hidden;">
+        <div class="view-container">
+          <div class="view-title">Settings</div>
+          <div class="view-sub">Manage your account and preferences</div>
+          <div class="settings-sections">
+
+            <!-- Profile card -->
+            <div class="profile-card">
+              <div class="profile-big-av" id="settingsAvatar"></div>
+              <div class="profile-card-info">
+                <div class="profile-card-name" id="settingsName"></div>
+                <div class="profile-card-rank" id="settingsRank"></div>
+                <div class="profile-card-roles" id="settingsRoles"></div>
+              </div>
+              <button class="settings-btn" onclick="openEditModal()">Edit Profile</button>
+            </div>
+
+            <!-- Account -->
+            <div class="settings-card">
+              <div class="settings-card-header">Account</div>
+              <div class="settings-row">
+                <div class="settings-row-icon">📧</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Email</div>
+                  <div class="settings-row-sub" id="settingsEmail">—</div>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-icon">🎖️</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Rank</div>
+                  <div class="settings-row-sub" id="settingsRankRow">Member</div>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-icon">✅</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Verification</div>
+                  <div class="settings-row-sub" id="settingsVerified">Not verified</div>
+                </div>
+                <button class="settings-btn" id="verifyBtn" onclick="applyVerification()">Apply</button>
+              </div>
+            </div>
+
+            <!-- Appearance -->
+            <div class="settings-card">
+              <div class="settings-card-header">Appearance</div>
+              <div class="settings-row">
+                <div class="settings-row-icon">🌙</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Dark Mode</div>
+                  <div class="settings-row-sub">Always on — Growth Partner is a dark app</div>
+                </div>
+                <button class="toggle on" disabled title="Dark mode is permanent"></button>
+              </div>
+              <div class="settings-row" id="shadowModeRow" style="display:none">
+                <div class="settings-row-icon">👁️</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Shadow Mode</div>
+                  <div class="settings-row-sub">Appear offline while having full access</div>
+                </div>
+                <button class="toggle" id="shadowToggle" onclick="toggleShadowMode(this)"></button>
+              </div>
+            </div>
+
+            <!-- Privacy -->
+            <div class="settings-card">
+              <div class="settings-card-header">Privacy</div>
+              <div class="settings-row">
+                <div class="settings-row-icon">🔍</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Show in Directory</div>
+                  <div class="settings-row-sub">Let members find you in the member directory</div>
+                </div>
+                <button class="toggle on" id="dirToggle" onclick="togglePref(this,'showInDirectory')"></button>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-card">
+              <div class="settings-card-header">Notifications</div>
+              <div class="settings-row">
+                <div class="settings-row-icon">🔔</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Push Notifications</div>
+                  <div class="settings-row-sub">Get notified about mentions and messages</div>
+                </div>
+                <button class="toggle on" id="notifToggle" onclick="togglePref(this,'pushNotifs')"></button>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-icon">💬</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">DM Notifications</div>
+                  <div class="settings-row-sub">Notifications for direct messages</div>
+                </div>
+                <button class="toggle on" id="dmNotifToggle" onclick="togglePref(this,'dmNotifs')"></button>
+              </div>
+            </div>
+
+            <!-- Danger zone -->
+            <div class="settings-card">
+              <div class="settings-card-header">Account Actions</div>
+              <div class="settings-row">
+                <div class="settings-row-icon">🚪</div>
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Sign Out</div>
+                  <div class="settings-row-sub">Sign out of your account</div>
+                </div>
+                <button class="settings-btn danger" onclick="handleSignOut()">Sign Out</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+
+    <!-- RIGHT PANEL (members) -->
+    <div class="right-panel" id="rightPanel">
+      <div id="membersList">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEditModal()">×</button>
+    <div class="modal-title">Edit Profile</div>
+    <div class="modal-sub">Update your public profile information</div>
+    <div class="modal-field">
+      <label class="modal-label">Display Name</label>
+      <input class="modal-input" type="text" id="editName" placeholder="Your name">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Username</label>
+      <input class="modal-input" type="text" id="editUsername" placeholder="@username">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Bio</label>
+      <textarea class="modal-input" id="editBio" placeholder="Tell people a bit about yourself..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-modal-save" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji Picker -->
+<div class="emoji-picker-popup" id="emojiPicker">
+  <!-- populated by JS -->
+</div>
+
+<!-- Profile Popup -->
+<div class="profile-popup" id="profilePopup">
+  <button class="pp-close" onclick="closeProfilePopup()">×</button>
+  <div class="pp-avatar" id="ppAvatar"></div>
+  <div class="pp-name" id="ppName"></div>
+  <div class="pp-username" id="ppUsername"></div>
+  <div class="pp-rank" id="ppRank"></div>
+  <div class="pp-bio" id="ppBio"></div>
+  <div class="pp-roles" id="ppRoles"></div>
+  <div class="pp-divider"></div>
+  <div class="pp-actions">
+    <div class="pp-btn" onclick="openDMWith()">Message</div>
+    <div class="pp-btn" onclick="closeProfilePopup()">Endorse</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signOut, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
+    collection, query, where, orderBy, limit, onSnapshot,
+    serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6tSG4SfFPi6dg-6rIX86klEe__kP4lYY",
+    authDomain: "growthpartners-260f8.firebaseapp.com",
+    projectId: "growthpartners-260f8",
+    storageBucket: "growthpartners-260f8.firebasestorage.app",
+    messagingSenderId: "802629986109",
+    appId: "1:802629986109:web:63f82eb984180e8c7cc754"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ===== STATE =====
+  let currentUser = null;
+  let currentProfile = null;
+  let currentChannel = null;
+  let currentView = 'chat';
+  let allMembers = [];
+  let dirFilter = 'all';
+  let messageUnsubscribe = null;
+  let voiceInRoom = false;
+  let shadowMode = false;
+  let pinnedMessages = {};
+
+  // ===== CHANNEL CONFIG =====
+  const RANKS = ['Member', 'Associate', 'Partner', 'Executive', 'Co-Leader', 'Leader', 'Admin'];
+
+  const CHANNELS = [
+    // Category, id, label, icon, desc, canPost (ranks array or 'all'), isVoice, adminOnly
+    { cat: 'COMMAND CENTRE', id: 'announcements', label: 'announcements', icon: '📣', desc: 'Official announcements', canPost: ['Admin', 'Shadow'] },
+    { cat: 'COMMAND CENTRE', id: 'the-vision', label: 'the-vision', icon: '🔭', desc: 'Our mission and direction', canPost: ['Admin'] },
+    { cat: 'COMMAND CENTRE', id: 'rules', label: 'rules', icon: '📜', desc: 'Community rules', canPost: ['Admin'] },
+    { cat: 'COMMAND CENTRE', id: 'onboarding', label: 'onboarding', icon: '🚀', desc: 'Getting started', canPost: ['Admin', 'Shadow'] },
+    { cat: 'COMMAND CENTRE', id: 'app-suggestions', label: 'app-suggestions', icon: '💡', desc: 'Share your ideas', canPost: 'all' },
+    { cat: 'COMMAND CENTRE', id: 'moderator-hub', label: 'moderator-hub', icon: '🛡️', desc: 'Admin & Shadow only', canPost: ['Admin', 'Shadow'], hidden: true },
+    { cat: 'OUR SKILLS', id: 'development-ai', label: 'development-ai', icon: '⚙️', desc: 'Dev & AI discussion', canPost: ['Admin', 'Development & AI'] },
+    { cat: 'OUR SKILLS', id: 'design-creative', label: 'design-creative', icon: '🎨', desc: 'Design & creative', canPost: ['Admin', 'Design & Creative'] },
+    { cat: 'OUR SKILLS', id: 'sales-marketing', label: 'sales-marketing', icon: '📈', desc: 'Sales & marketing', canPost: ['Admin', 'Sales & Marketing'] },
+    { cat: 'OUR SKILLS', id: 'writing-content', label: 'writing-content', icon: '✍️', desc: 'Writing & content', canPost: ['Admin', 'Writing & Content'] },
+    { cat: 'OUR SKILLS', id: 'strategy-management', label: 'strategy-management', icon: '🧭', desc: 'Strategy & management', canPost: ['Admin', 'Strategy & Management'] },
+    { cat: 'SEN', id: 'find-a-partner', label: 'find-a-partner', icon: '🤝', desc: 'Looking for collaborators', canPost: 'all' },
+    { cat: 'SEN', id: 'hire-me', label: 'hire-me', icon: '💼', desc: 'Showcase your services', canPost: 'all' },
+    { cat: 'RESOURCE VAULT', id: 'tool-directory', label: 'tool-directory', icon: '🧰', desc: 'Useful tools', canPost: 'all' },
+    { cat: 'RESOURCE VAULT', id: 'prompt-library', label: 'prompt-library', icon: '📚', desc: 'AI prompts & resources', canPost: 'all' },
+    { cat: 'THE LOUNGE', id: 'general-chat', label: 'general-chat', icon: '💬', desc: 'Open discussion', canPost: 'all' },
+    { cat: 'THE LOUNGE', id: 'voice-room-1', label: 'voice-room-1', icon: '🎙️', isVoice: true },
+    { cat: 'THE LOUNGE', id: 'voice-room-2', label: 'voice-room-2', icon: '🎙️', isVoice: true },
+    { cat: 'THE LOUNGE', id: 'voice-room-3', label: 'voice-room-3', icon: '🎙️', isVoice: true },
+  ];
+
+  function canUserPost(channel) {
+    if (!currentProfile) return false;
+    if (channel.canPost === 'all') return true;
+    const userRank = currentProfile.rank || 'Member';
+    const userRoles = currentProfile.roles || [];
+    const shadow = currentProfile.shadowName || false; // shadow co-leader
+    // Admin can always post
+    if (userRank === 'Admin') return true;
+    return channel.canPost.some(p => {
+      if (p === 'Admin') return userRank === 'Admin';
+      if (p === 'Shadow') return ['Co-Leader','Leader','Admin'].includes(userRank);
+      return userRoles.includes(p);
+    });
+  }
+
+  function canSeeChannel(channel) {
+    if (!currentProfile) return false;
+    if (channel.hidden) {
+      const r = currentProfile.rank || 'Member';
+      return ['Co-Leader','Leader','Admin'].includes(r);
+    }
+    return true;
+  }
+
+  // ===== HELPERS =====
+  function initials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+  }
+
+  function clockTime(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== AUTH INIT =====
+  // Safety timeout — if loading takes >10s something crashed, show error
+  const loadingTimeout = setTimeout(() => {
+    const ls = document.getElementById('loadingScreen');
+    if (ls && ls.style.display !== 'none') {
+      ls.innerHTML = `
+        <div style="text-align:center;padding:40px;max-width:360px">
+          <div style="font-size:32px;margin-bottom:16px">⚠️</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:10px">Failed to load</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+            This is usually a <strong style="color:var(--gold)">Firestore permissions</strong> issue.<br><br>
+            Go to your <strong style="color:var(--text)">Firebase Console → Firestore → Rules</strong> and set:<br>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:var(--text2);text-align:left;margin-bottom:20px;line-height:1.8">
+            rules_version = '2';<br>
+            service cloud.firestore {<br>
+            &nbsp;&nbsp;match /databases/{db}/documents {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;match /{doc=**} {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            }
+          </div>
+          <button onclick="location.reload()" style="padding:10px 24px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:#0C0C0E;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Retry</button>
+          &nbsp;
+          <button onclick="location.href='auth.html'" style="padding:10px 20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:8px;font-size:14px;cursor:pointer">Sign Out</button>
+        </div>`;
+    }
+  }, 10000);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      clearTimeout(loadingTimeout);
+      window.location.href = 'auth.html';
+      return;
+    }
+    currentUser = user;
+    console.log('[GP] Auth OK:', user.email);
+    try {
+      await loadProfile(user.uid);
+      console.log('[GP] Profile loaded:', currentProfile?.name);
+    } catch (e) {
+      console.error('[GP] loadProfile failed:', e);
+      // Still continue — use minimal profile from auth data
+      currentProfile = {
+        uid: user.uid,
+        name: user.displayName || user.email?.split('@')[0] || 'Member',
+        username: user.email?.split('@')[0]?.toLowerCase() || 'member',
+        email: user.email || '',
+        roles: [], rank: 'Member', points: 0,
+        verified: false, badges: [], shadowMode: false,
+        showInDirectory: true, bio: ''
+      };
+    }
+    try {
+      await initApp();
+    } catch (e) {
+      console.error('[GP] initApp failed:', e);
+      // Force show app anyway so user isn't stuck
+      clearTimeout(loadingTimeout);
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('app').classList.add('ready');
+    }
+    clearTimeout(loadingTimeout);
+  });
+
+  async function loadProfile(uid) {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (snap.exists()) {
+      currentProfile = { uid, ...snap.data() };
+    } else {
+      // New user — create profile
+      const data = {
+        name: currentUser.displayName || 'New Member',
+        username: (currentUser.email || '').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g,''),
+        email: currentUser.email || '',
+        roles: [], rank: 'Member', points: 0,
+        verified: false, badges: [], shadowMode: false, showInDirectory: true,
+        bio: '', joinedAt: serverTimestamp(), lastActive: serverTimestamp()
+      };
+      try {
+        await setDoc(doc(db, 'users', uid), data);
+      } catch(e) {
+        console.warn('[GP] Could not save new profile (Firestore rules?):', e.message);
+      }
+      currentProfile = { uid, ...data };
+    }
+    shadowMode = currentProfile.shadowMode || false;
+  }
+
+  async function initApp() {
+    // Each step is isolated — one failure won't block the whole app
+    try { renderSidebar(); } catch(e) { console.error('[GP] renderSidebar:', e); }
+    try { updateUserBar(); } catch(e) { console.error('[GP] updateUserBar:', e); }
+    try { await loadMembers(); } catch(e) { console.warn('[GP] loadMembers failed (Firestore rules?):', e.message); allMembers = []; }
+    try { renderMembersList(); } catch(e) { console.error('[GP] renderMembersList:', e); }
+    try { initEmojiPicker(); } catch(e) {}
+
+    // Always show the app — never get stuck on loading
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('app').classList.add('ready');
+
+    // Select first visible channel
+    try {
+      const first = CHANNELS.find(c => canSeeChannel(c));
+      if (first) selectChannel(first);
+    } catch(e) { console.error('[GP] selectChannel:', e); }
+
+    // Update last active (non-blocking)
+    updateDoc(doc(db, 'users', currentUser.uid), { lastActive: serverTimestamp() }).catch(()=>{});
+  }
+
+  // ===== SIDEBAR =====
+  function renderSidebar() {
+    const nav = document.getElementById('sidebarNav');
+    nav.innerHTML = '';
+    const cats = {};
+    CHANNELS.forEach(ch => {
+      if (!canSeeChannel(ch)) return;
+      if (!cats[ch.cat]) cats[ch.cat] = [];
+      cats[ch.cat].push(ch);
+    });
+    Object.entries(cats).forEach(([cat, channels]) => {
+      const catId = 'cat-' + cat.replace(/\s+/g,'-');
+      const catEl = document.createElement('div');
+      catEl.className = 'channel-category';
+      catEl.innerHTML = `${cat} <span class="category-arrow" id="arr-${catId}">▾</span>`;
+      catEl.onclick = () => toggleCategory(catId);
+      nav.appendChild(catEl);
+      const grp = document.createElement('div');
+      grp.className = 'channel-group';
+      grp.id = catId;
+      channels.forEach(ch => {
+        const item = document.createElement('div');
+        item.className = 'channel-item';
+        item.id = 'ch-' + ch.id;
+        item.innerHTML = `<span class="channel-icon">${ch.icon}</span>${ch.label}`;
+        if (ch.isVoice) {
+          item.innerHTML += `<span class="voice-indicator"><span class="voice-dot"></span></span>`;
+        }
+        item.onclick = () => { selectChannel(ch); closeSidebar(); };
+        grp.appendChild(item);
+      });
+      nav.appendChild(grp);
+    });
+  }
+
+  function toggleCategory(id) {
+    const grp = document.getElementById(id);
+    const arr = document.getElementById('arr-'+id);
+    if (grp) grp.classList.toggle('collapsed');
+    if (arr) arr.classList.toggle('collapsed');
+  }
+
+  function updateUserBar() {
+    if (!currentProfile) return;
+    const av = document.getElementById('userBarAvatar');
+    av.textContent = initials(currentProfile.name);
+    av.style.background = `linear-gradient(135deg, var(--gold-dim), var(--gold))`;
+    const statusDot = document.getElementById('userStatusDot');
+    statusDot.style.background = shadowMode ? 'var(--muted)' : 'var(--online)';
+    document.getElementById('userBarName').textContent = currentProfile.name || 'Unknown';
+    document.getElementById('userBarRank').textContent = currentProfile.rank || 'Member';
+    // Show shadow mode if eligible
+    const rank = currentProfile.rank || 'Member';
+    if (['Co-Leader','Leader','Admin'].includes(rank)) {
+      document.getElementById('shadowModeRow').style.display = 'flex';
+      const st = document.getElementById('shadowToggle');
+      if (shadowMode) st.classList.add('on'); else st.classList.remove('on');
+    }
+    // Settings
+    document.getElementById('settingsAvatar').textContent = initials(currentProfile.name);
+    const n = document.getElementById('settingsName');
+    n.textContent = currentProfile.name || '';
+    if (currentProfile.verified) {
+      n.innerHTML += ` <svg class="verified-badge" viewBox="0 0 24 24" fill="#4A9EBF"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="2" fill="none"/></svg>`;
+    }
+    document.getElementById('settingsRank').textContent = currentProfile.rank || 'Member';
+    document.getElementById('settingsEmail').textContent = currentProfile.email || '';
+    document.getElementById('settingsRankRow').textContent = currentProfile.rank || 'Member';
+    document.getElementById('settingsVerified').textContent = currentProfile.verified ? '✅ Verified' : 'Not verified';
+    const vBtn = document.getElementById('verifyBtn');
+    if (currentProfile.verified) vBtn.style.display = 'none';
+    const rolesEl = document.getElementById('settingsRoles');
+    rolesEl.innerHTML = (currentProfile.roles || []).map(r=>`<span class="role-tag">${r}</span>`).join('');
+  }
+
+  // ===== CHANNELS =====
+  function selectChannel(ch) {
+    currentChannel = ch;
+    // Update active state
+    document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('ch-' + ch.id);
+    if (el) el.classList.add('active');
+
+    // Update header
+    document.getElementById('chIcon').textContent = ch.icon || '#';
+    document.getElementById('chName').textContent = ch.label;
+    document.getElementById('chDesc').textContent = ch.desc || '';
+
+    if (ch.isVoice) {
+      showVoiceView(ch);
+    } else {
+      showChatView(ch);
+    }
+  }
+
+  function showChatView(ch) {
+    document.getElementById('chatView').style.display = 'flex';
+    document.getElementById('voiceView').style.display = 'none';
+    hideAllViews();
+    currentView = 'chat';
+
+    const canPost = canUserPost(ch);
+    document.getElementById('inputWrapper').style.display = canPost ? 'flex' : 'none';
+    document.getElementById('readOnlyBar').style.display = canPost ? 'none' : 'block';
+
+    const input = document.getElementById('msgInput');
+    input.placeholder = `Message #${ch.label}`;
+
+    loadMessages(ch.id);
+  }
+
+  function showVoiceView(ch) {
+    hideAllViews();
+    document.getElementById('voiceView').style.display = 'flex';
+    currentView = 'voice';
+    const roomLabel = ch.label.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+    document.getElementById('voiceRoomTitle').textContent = roomLabel;
+    // If someone is in a call in a different room, leave it first
+    if (voiceInRoom && currentChannel?.id !== ch.id) {
+      leaveVoice();
+    }
+    if (!voiceInRoom) {
+      document.getElementById('voiceParticipants').innerHTML = '';
+      document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
+      const btn = document.getElementById('joinVoiceBtn');
+      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
+    }
+  }
+
+  function hideAllViews() {
+    document.getElementById('directoryView').style.display = 'none';
+    document.getElementById('leaderboardView').style.display = 'none';
+    document.getElementById('settingsView').style.display = 'none';
+    document.getElementById('chatView').style.display = 'none';
+    document.getElementById('voiceView').style.display = 'none';
+  }
+
+  function switchView(view) {
+    hideAllViews();
+    currentView = view;
+    if (view === 'directory') {
+      document.getElementById('directoryView').style.display = 'flex';
+      renderDirectory();
+    } else if (view === 'leaderboard') {
+      document.getElementById('leaderboardView').style.display = 'flex';
+      renderLeaderboard();
+    } else if (view === 'settings') {
+      document.getElementById('settingsView').style.display = 'flex';
+      updateUserBar();
+    }
+  }
+  window.switchView = switchView;
+
+  // ===== MESSAGES =====
+  function loadMessages(channelId) {
+    if (messageUnsubscribe) { messageUnsubscribe(); messageUnsubscribe = null; }
+    const area = document.getElementById('messagesArea');
+    area.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px">Loading messages...</div>';
+
+    const ch = CHANNELS.find(c=>c.id===channelId);
+    const pinnedText = pinnedMessages[channelId];
+    const bar = document.getElementById('pinnedBar');
+    if (pinnedText) {
+      bar.classList.add('visible');
+      document.getElementById('pinnedText').textContent = pinnedText;
+    } else {
+      bar.classList.remove('visible');
+    }
+
+    const q = query(collection(db, 'channels', channelId, 'messages'), orderBy('createdAt', 'asc'), limit(100));
+
+    messageUnsubscribe = onSnapshot(q, (snap) => {
+      area.innerHTML = '';
+      // Welcome block
+      area.innerHTML = `
+        <div class="channel-welcome">
+          <div class="welcome-icon">${ch ? ch.icon : '#'}</div>
+          <div class="welcome-title">Welcome to #${channelId}</div>
+          <div class="welcome-desc">${ch?.desc || 'This is the beginning of this channel.'}</div>
+        </div>
+      `;
+
+      if (snap.empty) {
+        area.innerHTML += `<div style="color:var(--muted);font-size:13px;padding:12px 0">No messages yet. Be the first to post!</div>`;
+      }
+
+      let lastDate = null;
+      let lastAuthorId = null;
+      snap.forEach(docSnap => {
+        const msg = { id: docSnap.id, ...docSnap.data() };
+        const msgDate = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+        const dateStr = msgDate.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+
+        if (dateStr !== lastDate) {
+          lastDate = dateStr;
+          area.innerHTML += `<div class="date-divider">${dateStr}</div>`;
+          lastAuthorId = null;
+        }
+
+        const isMe = msg.authorId === currentUser?.uid;
+        const isContinuation = lastAuthorId === msg.authorId;
+        lastAuthorId = msg.authorId;
+
+        let msgHtml = '';
+        const escapedText = (msg.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/@(\w+)/g,'<span class="mention">@$1</span>');
+
+        if (!isContinuation) {
+          const rankBadge = msg.authorRank ? `<span class="msg-rank-badge">${msg.authorRank}</span>` : '';
+          const verCheck = msg.authorVerified ? ` <svg width="12" height="12" viewBox="0 0 24 24" fill="#4A9EBF"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="1.5" fill="none"/></svg>` : '';
+          msgHtml = `
+            <div class="msg-group" data-id="${msg.id}">
+              <div class="msg-row">
+                <div class="msg-avatar" onclick="showProfilePopup(event,'${msg.authorId}')">${initials(msg.authorName || '?')}</div>
+                <div class="msg-body">
+                  <div class="msg-meta">
+                    <span class="msg-author ${msg.authorRank==='Admin'?'admin-name':''}">${msg.authorName||'Unknown'}${verCheck}</span>
+                    ${rankBadge}
+                    <span class="msg-time">${clockTime(msg.createdAt)}</span>
+                  </div>
+                  <div class="msg-text">${escapedText}${msg.edited ? ' <span style="font-size:11px;color:var(--muted)">(edited)</span>' : ''}</div>
+                  ${msg.pinned ? '<div class="pinned-indicator">📌 Pinned</div>' : ''}
+                </div>
+                <div class="msg-actions">
+                  ${isMe ? `<button class="msg-action-btn" onclick="pinMsg('${msg.id}','${channelId}','${(msg.text||'').replace(/'/g,"\\'")}')">📌</button>` : ''}
+                  <button class="msg-action-btn" onclick="copyMsg('${(msg.text||'').replace(/'/g,"\\'")}')">📋</button>
+                  ${isMe ? `<button class="msg-action-btn" onclick="deleteMsg('${msg.id}','${channelId}')">🗑️</button>` : ''}
+                </div>
+              </div>
+            </div>`;
+        } else {
+          msgHtml = `
+            <div class="msg-continuation" data-id="${msg.id}">
+              <span class="msg-hover-time">${clockTime(msg.createdAt)}</span>
+              <div class="msg-text">${escapedText}${msg.edited ? ' <span style="font-size:11px;color:var(--muted)">(edited)</span>' : ''}</div>
+              <div class="msg-actions">
+                ${isMe ? `<button class="msg-action-btn" onclick="pinMsg('${msg.id}','${channelId}','${(msg.text||'').replace(/'/g,"\\'")}')">📌</button>` : ''}
+                <button class="msg-action-btn" onclick="copyMsg('${(msg.text||'').replace(/'/g,"\\'")}')">📋</button>
+                ${isMe ? `<button class="msg-action-btn" onclick="deleteMsg('${msg.id}','${channelId}')">🗑️</button>` : ''}
+              </div>
+            </div>`;
+        }
+        area.innerHTML += msgHtml;
+      });
+      area.scrollTop = area.scrollHeight;
+    }, err => {
+      console.error('[GP] Messages error:', err.code, err.message);
+      area.innerHTML = `
+        <div style="padding:24px;max-width:400px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">⚠️ Could not load messages</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px">
+            Your Firestore security rules are blocking reads.<br>
+            In <strong style="color:var(--text)">Firebase Console → Firestore → Rules</strong>, set:
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:var(--text2);line-height:1.8">
+            rules_version = '2';<br>
+            service cloud.firestore {<br>
+            &nbsp;&nbsp;match /databases/{db}/documents {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;match /{doc=**} {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            }
+          </div>
+        </div>`;
+    });
+  }
+
+  window.sendMessage = async function() {
+    if (!currentChannel || currentChannel.isVoice) return;
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+    if (!canUserPost(currentChannel)) { showToast('You cannot post in this channel'); return; }
+
+    input.value = '';
+    autoResize(input);
+
+    try {
+      await addDoc(collection(db, 'channels', currentChannel.id, 'messages'), {
+        text,
+        authorId: currentUser.uid,
+        authorName: currentProfile.name || 'Unknown',
+        authorRank: currentProfile.rank || 'Member',
+        authorVerified: currentProfile.verified || false,
+        createdAt: serverTimestamp(),
+        edited: false,
+        pinned: false
+      });
+      // Award points for posting
+      awardPoints(currentUser.uid, 2);
+    } catch(e) {
+      console.error('Send error:', e);
+      showToast('Failed to send message');
+    }
+  };
+
+  window.copyMsg = function(text) {
+    navigator.clipboard.writeText(text).then(()=>showToast('Copied!')).catch(()=>showToast('Copy failed'));
+  };
+
+  window.deleteMsg = async function(msgId, channelId) {
+    if (!confirm('Delete this message?')) return;
+    try {
+      await updateDoc(doc(db, 'channels', channelId, 'messages', msgId), { text: '[Message deleted]', edited: true });
+      showToast('Message deleted');
+    } catch(e) { showToast('Could not delete'); }
+  };
+
+  window.pinMsg = async function(msgId, channelId, text) {
+    try {
+      await updateDoc(doc(db, 'channels', channelId, 'messages', msgId), { pinned: true });
+      pinnedMessages[channelId] = text;
+      const bar = document.getElementById('pinnedBar');
+      bar.classList.add('visible');
+      document.getElementById('pinnedText').textContent = text;
+      showToast('Message pinned');
+    } catch(e) { showToast('Could not pin'); }
+  };
+
+  // ===== POINTS =====
+  async function awardPoints(uid, pts) {
+    try {
+      const ref = doc(db, 'users', uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const cur = snap.data().points || 0;
+        await updateDoc(ref, { points: cur + pts });
+      }
+    } catch(e) {}
+  }
+
+  // ===== MEMBERS =====
+  async function loadMembers() {
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      allMembers = [];
+      snap.forEach(d => allMembers.push({ uid: d.id, ...d.data() }));
+    } catch(e) {
+      console.error('loadMembers error:', e);
+      allMembers = [];
+    }
+  }
+
+  function renderMembersList() {
+    const list = document.getElementById('membersList');
+    list.innerHTML = '';
+    const grouped = {};
+    allMembers.forEach(m => {
+      const r = m.rank || 'Member';
+      if (!grouped[r]) grouped[r] = [];
+      grouped[r].push(m);
+    });
+    const rankOrder = ['Admin','Leader','Co-Leader','Executive','Partner','Associate','Member'];
+    rankOrder.forEach(rank => {
+      if (!grouped[rank]) return;
+      const cat = document.createElement('div');
+      cat.className = 'members-section';
+      cat.innerHTML = `<div class="members-category">${rank} — ${grouped[rank].length}</div>`;
+      grouped[rank].forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'member-item';
+        item.onclick = (e) => showProfilePopup(e, m.uid);
+        const statusColor = m.uid === currentUser?.uid ? (shadowMode ? 'var(--muted)' : 'var(--online)') : 'var(--offline)';
+        item.innerHTML = `
+          <div class="member-av">
+            ${initials(m.name)}
+            <div class="member-av-status" style="background:${statusColor}"></div>
+          </div>
+          <div class="member-info">
+            <div class="member-name">${m.name || 'Unknown'}</div>
+            <div class="member-role">${(m.roles||[]).slice(0,1).join('') || 'No role'}</div>
+          </div>`;
+        cat.appendChild(item);
+      });
+      list.appendChild(cat);
+    });
+    if (allMembers.length === 0) {
+      list.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--muted)">No members found</div>';
+    }
+  }
+
+  // ===== DIRECTORY =====
+  let currentDirFilter = 'all';
+
+  window.setDirFilter = function(filter, el) {
+    currentDirFilter = filter;
+    document.querySelectorAll('#dirFilters .chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    renderDirectory();
+  };
+
+  window.filterDirectory = function() { renderDirectory(); };
+
+  function renderDirectory() {
+    const search = (document.getElementById('dirSearch')?.value || '').toLowerCase();
+    const grid = document.getElementById('directoryGrid');
+    if (!grid) return;
+    let members = allMembers.filter(m => m.showInDirectory !== false);
+    if (currentDirFilter !== 'all') {
+      members = members.filter(m => (m.roles||[]).includes(currentDirFilter));
+    }
+    if (search) {
+      members = members.filter(m =>
+        (m.name||'').toLowerCase().includes(search) ||
+        (m.username||'').toLowerCase().includes(search)
+      );
+    }
+    if (members.length === 0) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No members found</div>';
+      return;
+    }
+    grid.innerHTML = members.map(m => {
+      const statusColor = m.uid === currentUser?.uid ? (shadowMode ? 'var(--muted)' : 'var(--online)') : 'var(--offline)';
+      const verBadge = m.verified ? `<svg class="verified-badge" viewBox="0 0 24 24" fill="#4A9EBF"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="1.5" fill="none"/></svg>` : '';
+      return `
+        <div class="member-card" onclick="showProfilePopupById('${m.uid}')">
+          <div class="card-avatar">
+            ${initials(m.name)}
+            <div class="card-status-dot" style="background:${statusColor}"></div>
+          </div>
+          <div class="card-name">${m.name||'Unknown'}${verBadge}</div>
+          <div class="card-rank">${m.rank||'Member'}</div>
+          <div class="card-roles">${(m.roles||[]).map(r=>`<span class="role-tag">${r}</span>`).join('')}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== LEADERBOARD =====
+  function renderLeaderboard() {
+    const sorted = [...allMembers].sort((a,b)=>(b.points||0)-(a.points||0));
+    const podiumEl = document.getElementById('lbPodium');
+    const listEl = document.getElementById('lbList');
+    if (!podiumEl || !listEl) return;
+
+    // Podium top 3 — arranged 2nd, 1st, 3rd
+    const top3 = sorted.slice(0,3);
+    const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+    const places = [2,1,3];
+    podiumEl.innerHTML = '';
+    order.forEach((m, i) => {
+      const place = places[i];
+      const crown = place === 1 ? '<span class="podium-crown">👑</span>' : '';
+      podiumEl.innerHTML += `
+        <div class="podium-place">
+          <div class="podium-av">
+            ${crown}
+            ${initials(m.name)}
+          </div>
+          <div class="podium-name">${m.name||'?'}</div>
+          <div class="podium-pts">${m.points||0} pts</div>
+          <div class="podium-block">${place}</div>
+        </div>`;
+    });
+
+    // Full list
+    listEl.innerHTML = sorted.map((m, i) => {
+      const isMe = m.uid === currentUser?.uid;
+      return `
+        <div class="rank-row ${isMe?'me':''}">
+          <div class="rank-number">${i+1}</div>
+          <div class="rank-av">${initials(m.name)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${m.name||'?'}${isMe?' (You)':''}</div>
+            <div class="rank-role">${(m.roles||[]).slice(0,1).join('') || m.rank || 'Member'}</div>
+          </div>
+          <div class="rank-pts">${m.points||0}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== PROFILE POPUP =====
+  let currentPopupUid = null;
+
+  window.showProfilePopup = function(e, uid) {
+    e.stopPropagation();
+    showProfilePopupById(uid, e.clientX, e.clientY);
+  };
+
+  window.showProfilePopupById = function(uid, x, y) {
+    const m = allMembers.find(m=>m.uid===uid) || (uid===currentUser?.uid ? currentProfile : null);
+    if (!m) return;
+    currentPopupUid = uid;
+    document.getElementById('ppAvatar').textContent = initials(m.name);
+    document.getElementById('ppName').textContent = m.name || 'Unknown';
+    document.getElementById('ppUsername').textContent = '@' + (m.username || '');
+    document.getElementById('ppRank').textContent = m.rank || 'Member';
+    document.getElementById('ppBio').textContent = m.bio || 'No bio yet.';
+    document.getElementById('ppRoles').innerHTML = (m.roles||[]).map(r=>`<span class="role-tag">${r}</span>`).join('');
+    const pop = document.getElementById('profilePopup');
+    pop.classList.add('open');
+    // Position
+    if (x !== undefined && y !== undefined) {
+      const pw = 240, ph = 300;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let left = Math.min(x + 12, vw - pw - 16);
+      let top = Math.min(y, vh - ph - 16);
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    } else {
+      pop.style.left = '50%';
+      pop.style.top = '50%';
+      pop.style.transform = 'translate(-50%,-50%)';
+    }
+  };
+
+  window.closeProfilePopup = function() {
+    document.getElementById('profilePopup').classList.remove('open');
+    document.getElementById('profilePopup').style.transform = '';
+  };
+
+  window.openDMWith = function() {
+    closeProfilePopup();
+    window.location.href = 'messages.html';
+  };
+
+  document.addEventListener('click', (e) => {
+    const pop = document.getElementById('profilePopup');
+    if (pop.classList.contains('open') && !pop.contains(e.target)) {
+      closeProfilePopup();
+    }
+    const ep = document.getElementById('emojiPicker');
+    if (ep.classList.contains('open') && !ep.contains(e.target) && e.target.id !== 'emojiBtn') {
+      ep.classList.remove('open');
+    }
+  });
+
+  // ===== VOICE (PeerJS — zero setup, completely free) =====
+  // Uses PeerJS free public broker for signaling + WebRTC p2p audio
+  // No accounts, no API keys, no server to deploy, no usage limits.
+
+  let localStream = null;
+  let myPeer = null;
+  let voiceCalls = {};        // peerId -> MediaConnection
+  let voicePeerNames = {};    // peerId -> displayName
+  let voiceRoomPeers = [];    // list of peer IDs in this room (from Firestore)
+  let voiceRoomUnsub = null;  // Firestore listener
+
+  // Load PeerJS dynamically (CDN, free)
+  function loadPeerJS() {
+    return new Promise((resolve, reject) => {
+      if (window.Peer) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // Each user's PeerJS ID is deterministic: uid + roomId (so we can find each other)
+  function makePeerId(uid, roomId) {
+    // PeerJS IDs must be alphanumeric, max 50 chars
+    const safe = (uid + '-' + roomId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 50);
+    return safe;
+  }
+
+  // Store presence in Firestore so others know who's in the room
+  async function joinRoomPresence(roomId) {
+    if (!currentUser) return;
+    try {
+      await setDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), {
+        uid: currentUser.uid,
+        name: currentProfile?.name || 'Member',
+        peerId: makePeerId(currentUser.uid, roomId),
+        joinedAt: serverTimestamp()
+      });
+    } catch(e) { console.warn('[Voice] Could not write presence:', e.message); }
+  }
+
+  async function leaveRoomPresence(roomId) {
+    if (!currentUser || !roomId) return;
+    try {
+      await updateDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), { active: false }).catch(async () => {
+        // fallback: just set inactive flag — deleteDoc needs to be imported separately
+        await setDoc(doc(db, 'voiceRooms', roomId, 'presence', currentUser.uid), { active: false, uid: currentUser.uid });
+      });
+    } catch(e) {}
+  }
+
+  function watchRoomPresence(roomId) {
+    if (voiceRoomUnsub) { voiceRoomUnsub(); voiceRoomUnsub = null; }
+    voiceRoomUnsub = onSnapshot(
+      collection(db, 'voiceRooms', roomId, 'presence'),
+      (snap) => {
+        snap.docChanges().forEach(change => {
+          const data = change.doc.data();
+          if (data.uid === currentUser?.uid) return; // skip self
+          if (data.active === false) {
+            removePeerUI(data.peerId);
+            return;
+          }
+          if (change.type === 'added') {
+            // Someone joined — call them if we're already in
+            voicePeerNames[data.peerId] = data.name;
+            if (voiceInRoom && myPeer) {
+              callPeer(data.peerId, data.name);
+            }
+            addParticipantUI(data.peerId, data.name);
+          }
+          if (change.type === 'removed' || change.type === 'modified') {
+            if (change.type === 'removed' || data.active === false) {
+              removePeerUI(data.peerId);
+            }
+          }
+        });
+        // Update sub count
+        updateParticipantCount(snap.size);
+      },
+      (err) => { console.warn('[Voice] Presence watch error:', err.message); }
+    );
+  }
+
+  function callPeer(peerId, name) {
+    if (!localStream || !myPeer || voiceCalls[peerId]) return;
+    console.log('[Voice] Calling peer:', peerId);
+    const call = myPeer.call(peerId, localStream);
+    if (!call) return;
+    voiceCalls[peerId] = call;
+    call.on('stream', (remoteStream) => {
+      playAudio(peerId, remoteStream);
+      document.getElementById('vpa-' + peerId)?.classList.add('speaking');
+    });
+    call.on('close', () => { removePeerUI(peerId); });
+    call.on('error', (e) => { console.warn('[Voice] Call error:', e); });
+  }
+
+  function playAudio(peerId, stream) {
+    let audio = document.getElementById('audio-' + peerId);
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.id = 'audio-' + peerId;
+      audio.autoplay = true;
+      audio.style.display = 'none';
+      document.body.appendChild(audio);
+    }
+    audio.srcObject = stream;
+  }
+
+  function addParticipantUI(peerId, name) {
+    const container = document.getElementById('voiceParticipants');
+    if (!container || document.getElementById('vp-' + peerId)) return;
+    const el = document.createElement('div');
+    el.className = 'voice-participant';
+    el.id = 'vp-' + peerId;
+    el.innerHTML = `
+      <div class="vp-avatar" id="vpa-${peerId}">${initials(name)}</div>
+      <div class="vp-name">${name}</div>`;
+    container.appendChild(el);
+  }
+
+  function removePeerUI(peerId) {
+    const el = document.getElementById('vp-' + peerId);
+    if (el) el.remove();
+    const audio = document.getElementById('audio-' + peerId);
+    if (audio) audio.remove();
+    if (voiceCalls[peerId]) { voiceCalls[peerId].close(); delete voiceCalls[peerId]; }
+    delete voicePeerNames[peerId];
+    // Update count
+    const count = document.querySelectorAll('#voiceParticipants .voice-participant').length;
+    updateParticipantCount(count);
+  }
+
+  function updateParticipantCount(total) {
+    const sub = document.getElementById('voiceRoomSub');
+    if (!sub || !voiceInRoom) return;
+    if (total <= 1) sub.textContent = 'Just you in here — waiting for others';
+    else sub.textContent = `${total} people in this room`;
+  }
+
+  window.joinVoice = async function() {
+    if (!currentChannel?.isVoice) return;
+    const btn = document.getElementById('joinVoiceBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
+
+    // 1. Load PeerJS library
+    try {
+      await loadPeerJS();
+    } catch(e) {
+      showToast('Could not load voice library — check your connection');
+      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
+      return;
+    }
+
+    // 2. Get microphone
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch(e) {
+      const msg = e.name === 'NotAllowedError'
+        ? 'Microphone blocked — allow mic access in your browser settings'
+        : 'Could not access microphone: ' + e.message;
+      showToast(msg);
+      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
+      return;
+    }
+
+    // 3. Create PeerJS connection
+    const myPeerId = makePeerId(currentUser.uid, currentChannel.id);
+    console.log('[Voice] My peer ID:', myPeerId);
+
+    try {
+      await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error('PeerJS connection timed out')), 8000);
+        myPeer = new Peer(myPeerId, {
+          // Uses PeerJS free public server — no config needed
+          debug: 0
+        });
+        myPeer.on('open', (id) => {
+          clearTimeout(timeoutId);
+          console.log('[Voice] PeerJS connected, ID:', id);
+          resolve();
+        });
+        myPeer.on('error', (e) => {
+          clearTimeout(timeoutId);
+          // ID taken means we're already connected from another tab — just reconnect
+          if (e.type === 'unavailable-id') {
+            myPeer.destroy();
+            myPeer = new Peer(myPeerId + '-' + Date.now().toString(36), { debug: 0 });
+            myPeer.on('open', resolve);
+            myPeer.on('error', reject);
+          } else {
+            reject(e);
+          }
+        });
+      });
+    } catch(e) {
+      console.error('[Voice] PeerJS error:', e);
+      showToast('Could not connect to voice — try again');
+      localStream.getTracks().forEach(t => t.stop());
+      localStream = null;
+      if (btn) { btn.disabled = false; btn.innerHTML = '🎤 Join Voice Room'; }
+      return;
+    }
+
+    // 4. Answer incoming calls
+    myPeer.on('call', (call) => {
+      call.answer(localStream);
+      voiceCalls[call.peer] = call;
+      call.on('stream', (remoteStream) => {
+        const name = voicePeerNames[call.peer] || 'Member';
+        addParticipantUI(call.peer, name);
+        playAudio(call.peer, remoteStream);
+        document.getElementById('vpa-' + call.peer)?.classList.add('speaking');
+      });
+      call.on('close', () => removePeerUI(call.peer));
+    });
+
+    voiceInRoom = true;
+
+    // 5. Add self to UI
+    document.getElementById('voiceParticipants').innerHTML = '';
+    addParticipantUI('me', currentProfile?.name || 'You');
+    document.getElementById('vpa-me')?.classList.add('speaking');
+
+    // 6. Write presence to Firestore + watch for others
+    await joinRoomPresence(currentChannel.id);
+    watchRoomPresence(currentChannel.id);
+
+    // 7. Update buttons
+    document.getElementById('voiceBtns').innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button id="muteBtn" class="join-voice-btn" style="padding:11px 28px;font-size:14px" onclick="toggleMute()">🎤 Mute</button>
+        <button class="leave-voice-btn" onclick="leaveVoice()">Leave Room</button>
+      </div>`;
+
+    awardPoints(currentUser?.uid, 3);
+  };
+
+  window.toggleMute = function() {
+    if (!localStream) return;
+    const track = localStream.getAudioTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = track.enabled ? '🎤 Mute' : '🔇 Unmute';
+    document.getElementById('vpa-me')?.classList.toggle('speaking', track.enabled);
+  };
+
+  window.leaveVoice = async function() {
+    voiceInRoom = false;
+    // Close all calls
+    Object.values(voiceCalls).forEach(c => { try { c.close(); } catch(e) {} });
+    Object.assign(voiceCalls, {});
+    voicePeerNames = {};
+    // Stop mic
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    // Destroy peer
+    if (myPeer) { myPeer.destroy(); myPeer = null; }
+    // Remove all audio elements
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.remove());
+    // Stop presence listener
+    if (voiceRoomUnsub) { voiceRoomUnsub(); voiceRoomUnsub = null; }
+    // Remove from Firestore presence
+    if (currentChannel?.id) await leaveRoomPresence(currentChannel.id);
+    // Reset UI
+    document.getElementById('voiceParticipants').innerHTML = '';
+    document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
+    document.getElementById('voiceBtns').innerHTML = `<button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>`;
+    showToast('Left voice room');
+  };
+
+  // ===== SETTINGS =====
+  window.openEditModal = function() {
+    document.getElementById('editName').value = currentProfile?.name || '';
+    document.getElementById('editUsername').value = currentProfile?.username || '';
+    document.getElementById('editBio').value = currentProfile?.bio || '';
+    document.getElementById('editModal').classList.add('open');
+  };
+
+  window.closeEditModal = function() {
+    document.getElementById('editModal').classList.remove('open');
+  };
+
+  window.saveProfile = async function() {
+    const name = document.getElementById('editName').value.trim();
+    const username = document.getElementById('editUsername').value.trim().replace('@','');
+    const bio = document.getElementById('editBio').value.trim();
+    if (!name) { showToast('Name cannot be empty'); return; }
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), { name, username, bio });
+      currentProfile.name = name;
+      currentProfile.username = username;
+      currentProfile.bio = bio;
+      await updateProfile(currentUser, { displayName: name });
+      closeEditModal();
+      updateUserBar();
+      showToast('Profile saved!');
+    } catch(e) { showToast('Could not save profile'); }
+  };
+
+  window.toggleShadowMode = async function(btn) {
+    shadowMode = !shadowMode;
+    if (shadowMode) btn.classList.add('on'); else btn.classList.remove('on');
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), { shadowMode });
+      currentProfile.shadowMode = shadowMode;
+      updateUserBar();
+      showToast(shadowMode ? 'Shadow mode on — you appear offline' : 'Shadow mode off');
+    } catch(e) {}
+  };
+
+  window.togglePref = async function(btn, pref) {
+    const on = btn.classList.toggle('on');
+    const update = {};
+    update[pref] = on;
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), update);
+      currentProfile[pref] = on;
+    } catch(e) {}
+  };
+
+  window.applyVerification = async function() {
+    try {
+      await addDoc(collection(db, 'verificationRequests'), {
+        uid: currentUser.uid,
+        name: currentProfile.name,
+        username: currentProfile.username,
+        email: currentProfile.email,
+        requestedAt: serverTimestamp(),
+        status: 'pending'
+      });
+      document.getElementById('verifyBtn').textContent = 'Pending';
+      document.getElementById('verifyBtn').disabled = true;
+      showToast('Verification request sent!');
+    } catch(e) { showToast('Could not submit request'); }
+  };
+
+  window.handleSignOut = async function() {
+    if (!confirm('Sign out?')) return;
+    await signOut(auth);
+    window.location.href = 'auth.html';
+  };
+
+  // ===== INPUT =====
+  window.handleInputKey = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  window.autoResize = function(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  };
+
+  window.triggerFileUpload = function() {
+    document.getElementById('fileInput').click();
+  };
+
+  window.handleFileUpload = function(e) {
+    const files = e.target.files;
+    if (!files.length) return;
+    const names = Array.from(files).map(f=>f.name).join(', ');
+    showToast(`File sharing coming soon: ${names}`);
+  };
+
+  // ===== EMOJI =====
+  const EMOJIS = ['😊','😂','🔥','❤️','👍','🎉','🚀','💡','⚡','🤝','💪','✅','🎯','🌟','💼','📈','🧠','👀','🙏','😎','🤔','💬','📌','🎨','⚙️','📚','✍️','🧭','🎙️','🏆'];
+
+  function initEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    EMOJIS.forEach(em => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-btn-item';
+      btn.textContent = em;
+      btn.onclick = () => {
+        const input = document.getElementById('msgInput');
+        input.value += em;
+        input.focus();
+        picker.classList.remove('open');
+      };
+      picker.appendChild(btn);
+    });
+  }
+
+  window.toggleEmojiPicker = function(e) {
+    e.stopPropagation();
+    const picker = document.getElementById('emojiPicker');
+    picker.classList.toggle('open');
+    if (picker.classList.contains('open')) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+      picker.style.right = (window.innerWidth - rect.right) + 'px';
+    }
+  };
+
+  // ===== MOBILE SIDEBAR =====
+  window.openSidebar = function() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.add('open');
+  };
+
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  };
+
+  // ===== DAILY ACTIVE POINTS =====
+  async function dailyLogin() {
+    try {
+      const key = `gp_daily_${currentUser.uid}`;
+      const last = localStorage.getItem(key);
+      const today = new Date().toDateString();
+      if (last !== today) {
+        localStorage.setItem(key, today);
+        await awardPoints(currentUser.uid, 2);
+      }
+    } catch(e) {}
+  }
+
+  setTimeout(dailyLogin, 2000);
+</script>
+
+</body>
+</html>

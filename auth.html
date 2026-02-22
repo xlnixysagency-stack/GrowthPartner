@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Growth Partner — Auth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg: #0C0C0E;
+          --surface: #131318;
+          --surface2: #1C1C24;
+          --border: #2a2a35;
+          --text: #EDEAE4;
+          --muted: #8a8690;
+          --gold: #C9A84C;
+          --gold-dim: #6B6040;
+          --error: #e05c5c;
+          --success: #52c47a;
+        }
+
+        body {
+          font-family: 'DM Sans', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        body::before {
+          content: '';
+          position: fixed;
+          top: -30%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .auth-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          width: 100%;
+          max-width: 440px;
+          padding: 40px 36px;
+          position: relative;
+          z-index: 1;
+          animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+          text-align: center;
+          margin-bottom: 28px;
+        }
+
+        .logo-mark {
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 12px;
+          box-shadow: 0 0 30px rgba(201,168,76,0.25);
+        }
+
+        .logo-mark svg { width: 26px; height: 26px; fill: #0C0C0E; }
+
+        .logo h1 {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 22px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          color: var(--text);
+        }
+
+        .logo p {
+          font-size: 13px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+          display: flex;
+          background: var(--bg);
+          border-radius: 10px;
+          padding: 4px;
+          margin-bottom: 28px;
+          border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+          flex: 1;
+          padding: 9px;
+          background: none;
+          border: none;
+          border-radius: 7px;
+          color: var(--muted);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+          background: var(--surface2);
+          color: var(--gold);
+          border: 1px solid var(--border);
+        }
+
+        /* Forms */
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+
+        .form-group {
+          margin-bottom: 16px;
+        }
+
+        label {
+          display: block;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 7px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+          width: 100%;
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 9px;
+          padding: 12px 14px;
+          color: var(--text);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          transition: border-color 0.2s;
+          outline: none;
+          -webkit-appearance: none;
+        }
+
+        input:focus { border-color: var(--gold-dim); }
+        input::placeholder { color: #4a4850; }
+
+        input.error { border-color: var(--error) !important; }
+
+        /* Password strength */
+        .pw-strength {
+          display: flex;
+          gap: 4px;
+          margin-top: 7px;
+        }
+
+        .pw-bar {
+          flex: 1;
+          height: 3px;
+          background: var(--border);
+          border-radius: 2px;
+          transition: background 0.3s;
+        }
+
+        .pw-bar.weak { background: var(--error); }
+        .pw-bar.medium { background: #e0a050; }
+        .pw-bar.strong { background: var(--success); }
+
+        .pw-label {
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 5px;
+        }
+
+        /* Step indicator */
+        .steps {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 24px;
+        }
+
+        .step-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--border);
+          transition: all 0.3s;
+        }
+
+        .step-dot.active {
+          background: var(--gold);
+          width: 22px;
+          border-radius: 4px;
+        }
+
+        .step-dot.done { background: var(--gold-dim); }
+
+        /* Skill roles */
+        .step-title {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 6px;
+          color: var(--text);
+        }
+
+        .step-sub {
+          font-size: 13px;
+          color: var(--muted);
+          margin-bottom: 20px;
+          line-height: 1.5;
+        }
+
+        .roles-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+
+        .role-card {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 14px 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+          position: relative;
+          user-select: none;
+        }
+
+        .role-card:hover { border-color: var(--gold-dim); }
+
+        .role-card.selected {
+          border-color: var(--gold);
+          background: rgba(201,168,76,0.06);
+        }
+
+        .role-card.selected::after {
+          content: '✓';
+          position: absolute;
+          top: 8px;
+          right: 10px;
+          font-size: 12px;
+          color: var(--gold);
+          font-weight: 700;
+        }
+
+        .role-icon { font-size: 20px; margin-bottom: 8px; }
+
+        .role-name {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text);
+          line-height: 1.3;
+        }
+
+        .role-sub {
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+
+        /* Terms */
+        .terms-box {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 14px;
+          font-size: 12px;
+          color: var(--muted);
+          line-height: 1.7;
+          max-height: 140px;
+          overflow-y: auto;
+          margin-bottom: 16px;
+        }
+
+        .terms-box::-webkit-scrollbar { width: 4px; }
+        .terms-box::-webkit-scrollbar-track { background: transparent; }
+        .terms-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .checkbox-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          margin-bottom: 10px;
+          cursor: pointer;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+          width: 16px;
+          height: 16px;
+          min-width: 16px;
+          accent-color: var(--gold);
+          cursor: pointer;
+          margin-top: 1px;
+        }
+
+        .checkbox-row span {
+          font-size: 13px;
+          color: var(--muted);
+          line-height: 1.5;
+        }
+
+        /* Buttons */
+        .btn-primary {
+          width: 100%;
+          padding: 13px;
+          background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+          color: #0C0C0E;
+          border: none;
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: opacity 0.2s, transform 0.1s;
+          letter-spacing: 0.3px;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:active { transform: scale(0.99); }
+
+        .btn-primary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .btn-secondary {
+          width: 100%;
+          padding: 12px;
+          background: var(--surface2);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s;
+          margin-bottom: 10px;
+        }
+
+        .btn-secondary:hover { background: #242430; }
+
+        .btn-back {
+          background: none;
+          border: none;
+          color: var(--muted);
+          font-size: 13px;
+          cursor: pointer;
+          padding: 0;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-back:hover { color: var(--text); }
+
+        .divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 16px 0;
+          color: var(--muted);
+          font-size: 12px;
+        }
+
+        .divider::before, .divider::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: var(--border);
+        }
+
+        /* Toast / alert */
+        .alert {
+          padding: 11px 14px;
+          border-radius: 9px;
+          font-size: 13px;
+          margin-bottom: 16px;
+          display: none;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .alert.error {
+          background: rgba(224,92,92,0.1);
+          border: 1px solid rgba(224,92,92,0.3);
+          color: #e07070;
+        }
+
+        .alert.success {
+          background: rgba(82,196,122,0.1);
+          border: 1px solid rgba(82,196,122,0.3);
+          color: var(--success);
+        }
+
+        .alert.show { display: flex; }
+
+        /* Loading spinner */
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(12,12,14,0.3);
+          border-top-color: #0C0C0E;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 6px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Google button */
+        .btn-google {
+          width: 100%;
+          padding: 12px;
+          background: var(--surface2);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .btn-google:hover { background: #242430; }
+
+        .google-icon {
+          width: 18px;
+          height: 18px;
+        }
+
+        .forgot-link {
+          text-align: right;
+          margin-top: -8px;
+          margin-bottom: 16px;
+        }
+
+        .forgot-link a {
+          font-size: 12px;
+          color: var(--muted);
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .forgot-link a:hover { color: var(--gold); }
+
+        @media (max-width: 480px) {
+          .auth-card { padding: 28px 22px; }
+          .roles-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="logo">
+        <div class="logo-mark">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <h1>Growth Partner</h1>
+        <p>Private community for builders</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('signin')">Sign In</button>
+        <button class="tab-btn" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert error" id="alertBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="alertText">Something went wrong.</span>
+    </div>
+
+    <!-- SIGN IN -->
+    <div class="form-section active" id="signinSection">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="signinEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="signinPassword" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <div class="forgot-link">
+            <a onclick="showForgot()">Forgot password?</a>
+        </div>
+        <button class="btn-primary" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+        <div class="divider">or</div>
+        <button class="btn-google" onclick="handleGoogleSignIn()">
+            <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
+        </button>
+    </div>
+
+    <!-- SIGN UP — Step 1 -->
+    <div class="form-section" id="signupStep1">
+        <div class="steps">
+            <div class="step-dot active" id="dot1"></div>
+            <div class="step-dot" id="dot2"></div>
+            <div class="step-dot" id="dot3"></div>
+        </div>
+        <div class="step-title">Create your account</div>
+        <div class="step-sub">Let's start with your basic details.</div>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="regUsername" placeholder="@username" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="regPassword" placeholder="Min 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+            <div class="pw-strength">
+                <div class="pw-bar" id="pwBar1"></div>
+                <div class="pw-bar" id="pwBar2"></div>
+                <div class="pw-bar" id="pwBar3"></div>
+                <div class="pw-bar" id="pwBar4"></div>
+            </div>
+            <div class="pw-label" id="pwLabel"></div>
+        </div>
+        <button class="btn-primary" onclick="goToStep2()">Continue</button>
+        <div class="divider">or</div>
+        <button class="btn-google" onclick="handleGoogleSignIn()">
+            <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
+        </button>
+    </div>
+
+    <!-- SIGN UP — Step 2 (Skill Roles) -->
+    <div class="form-section" id="signupStep2">
+        <div class="steps">
+            <div class="step-dot done" id="dot1b"></div>
+            <div class="step-dot active" id="dot2b"></div>
+            <div class="step-dot" id="dot3b"></div>
+        </div>
+        <button class="btn-back" onclick="goToStep1()">← Back</button>
+        <div class="step-title">Choose your skill roles</div>
+        <div class="step-sub">Select one or more areas you specialise in. This helps others find the right collaborators.</div>
+
+        <div class="roles-grid">
+            <div class="role-card" onclick="toggleRole(this, 'Development & AI')">
+                <div class="role-icon">⚙️</div>
+                <div class="role-name">Development & AI</div>
+                <div class="role-sub">Coding, ML, automation</div>
+            </div>
+            <div class="role-card" onclick="toggleRole(this, 'Design & Creative')">
+                <div class="role-icon">🎨</div>
+                <div class="role-name">Design & Creative</div>
+                <div class="role-sub">UI/UX, branding, visuals</div>
+            </div>
+            <div class="role-card" onclick="toggleRole(this, 'Sales & Marketing')">
+                <div class="role-icon">📈</div>
+                <div class="role-name">Sales & Marketing</div>
+                <div class="role-sub">Growth, outreach, ads</div>
+            </div>
+            <div class="role-card" onclick="toggleRole(this, 'Writing & Content')">
+                <div class="role-icon">✍️</div>
+                <div class="role-name">Writing & Content</div>
+                <div class="role-sub">Copy, scripts, blogs</div>
+            </div>
+            <div class="role-card" style="grid-column: 1 / -1;" onclick="toggleRole(this, 'Strategy & Management')">
+                <div class="role-icon">🧭</div>
+                <div class="role-name">Strategy & Management</div>
+                <div class="role-sub">Planning, ops, leadership</div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="goToStep3()">Continue</button>
+    </div>
+
+    <!-- SIGN UP — Step 3 (Terms) -->
+    <div class="form-section" id="signupStep3">
+        <div class="steps">
+            <div class="step-dot done"></div>
+            <div class="step-dot done"></div>
+            <div class="step-dot active"></div>
+        </div>
+        <button class="btn-back" onclick="goToStep2()">← Back</button>
+        <div class="step-title">Community Agreement</div>
+        <div class="step-sub">Please read and agree to the following before joining.</div>
+
+        <div class="terms-box">
+            <strong style="color: var(--text);">Growth Partner Community Guidelines</strong><br><br>
+            By joining, you agree to uphold the values of this community: respect, collaboration, and integrity.<br><br>
+            <strong style="color: var(--text);">1. Conduct</strong><br>
+            Hate speech, harassment, discrimination, or any toxic behaviour will result in immediate removal. Treat all members with respect regardless of rank, role, or background.<br><br>
+            <strong style="color: var(--text);">2. Content</strong><br>
+            Share knowledge generously. Do not plagiarise or misrepresent your work or others'.<br><br>
+            <strong style="color: var(--text);">3. Moderation</strong><br>
+            Messages reported by members may be reviewed by admin in line with our moderation policy. AI-assisted keyword detection may flag content for review.<br><br>
+            <strong style="color: var(--text);">4. Privacy</strong><br>
+            Do not share other members' personal information outside this community without consent.<br><br>
+            <strong style="color: var(--text);">5. Enforcement</strong><br>
+            Admins reserve the right to warn, demote, suspend, or ban members who violate these guidelines.
+        </div>
+
+        <label class="checkbox-row">
+            <input type="checkbox" id="agreeTerms">
+            <span>I have read and agree to the community guidelines and moderation policy</span>
+        </label>
+        <label class="checkbox-row">
+            <input type="checkbox" id="agreeAge">
+            <span>I confirm I am 13 years of age or older</span>
+        </label>
+
+        <button class="btn-primary" id="createBtn" onclick="handleCreateAccount()">Create Account</button>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div class="form-section" id="forgotSection">
+        <button class="btn-back" onclick="hideForgot()">← Back to Sign In</button>
+        <div class="step-title">Reset Password</div>
+        <div class="step-sub">Enter your email and we'll send you a reset link.</div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="forgotEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button class="btn-primary" onclick="handleForgot()">Send Reset Link</button>
+    </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup,
+      sendPasswordResetEmail,
+      onAuthStateChanged,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      serverTimestamp,
+      query,
+      collection,
+      where,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ============================================================
+    // 🔑 PASTE YOUR FIREBASE CONFIG BELOW
+    // ============================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6tSG4SfFPi6dg-6rIX86klEe__kP4lYY",
+      authDomain: "growthpartners-260f8.firebaseapp.com",
+      projectId: "growthpartners-260f8",
+      storageBucket: "growthpartners-260f8.firebasestorage.app",
+      messagingSenderId: "802629986109",
+      appId: "1:802629986109:web:63f82eb984180e8c7cc754"
+    };
+    // ============================================================
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // Redirect if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = 'growth-partner.html';
+      }
+    });
+
+    // ---- Helpers ----
+    function showAlert(msg, type = 'error') {
+      const box = document.getElementById('alertBox');
+      const text = document.getElementById('alertText');
+      box.className = `alert ${type} show`;
+      text.textContent = msg;
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (type === 'success') setTimeout(() => box.classList.remove('show'), 4000);
+    }
+
+    function hideAlert() {
+      document.getElementById('alertBox').classList.remove('show');
+    }
+
+    function setLoading(btnId, loading, defaultText) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.innerHTML = loading ? `<span class="spinner"></span> Please wait...` : defaultText;
+    }
+
+    async function usernameExists(username) {
+      const q = query(collection(db, 'users'), where('username', '==', username.toLowerCase()));
+      const snap = await getDocs(q);
+      return !snap.empty;
+    }
+
+    async function createUserProfile(uid, data) {
+      await setDoc(doc(db, 'users', uid), {
+        name: data.name,
+        username: data.username.toLowerCase(),
+        email: data.email,
+        roles: data.roles,
+        rank: 'Member',
+        points: 0,
+        verified: false,
+        badges: [],
+        shadowMode: false,
+        showInDirectory: true,
+        bio: '',
+        joinedAt: serverTimestamp(),
+        lastActive: serverTimestamp()
+      });
+    }
+
+    // ---- Sign In ----
+    window.handleSignIn = async function () {
+      hideAlert();
+      const email = document.getElementById('signinEmail').value.trim();
+      const password = document.getElementById('signinPassword').value;
+
+      if (!email) return showAlert('Please enter your email.');
+      if (!password) return showAlert('Please enter your password.');
+
+      setLoading('signinBtn', true, 'Sign In');
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = 'growth-partner.html';
+      } catch (err) {
+        const msgs = {
+          'auth/user-not-found': 'No account found with that email.',
+          'auth/wrong-password': 'Incorrect password. Please try again.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/invalid-credential': 'Incorrect email or password.',
+          'auth/too-many-requests': 'Too many attempts. Please try again later.',
+          'auth/network-request-failed': 'Network error. Check your connection.'
+        };
+        showAlert(msgs[err.code] || `Sign in failed: ${err.message}`);
+      } finally {
+        setLoading('signinBtn', false, 'Sign In');
+      }
+    };
+
+    // ---- Google Sign In ----
+    window.handleGoogleSignIn = async function () {
+      hideAlert();
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        // Check if profile exists
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (!snap.exists()) {
+          // New Google user — create minimal profile, they'll be prompted for roles
+          await setDoc(doc(db, 'users', user.uid), {
+            name: user.displayName || 'New Member',
+            username: user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, ''),
+            email: user.email,
+            roles: [],
+            rank: 'Member',
+            points: 0,
+            verified: false,
+            badges: [],
+            shadowMode: false,
+            showInDirectory: true,
+            bio: '',
+            joinedAt: serverTimestamp(),
+            lastActive: serverTimestamp()
+          });
+        }
+        window.location.href = 'growth-partner.html';
+      } catch (err) {
+        if (err.code === 'auth/popup-closed-by-user') return;
+        showAlert('Google sign-in failed. Please try again.');
+      }
+    };
+
+    // ---- Signup flow ----
+    let selectedRoles = [];
+
+    window.toggleRole = function (el, role) {
+      el.classList.toggle('selected');
+      if (el.classList.contains('selected')) {
+        selectedRoles.push(role);
+      } else {
+        selectedRoles = selectedRoles.filter(r => r !== role);
+      }
+    };
+
+    window.goToStep2 = function () {
+      hideAlert();
+      const name = document.getElementById('regName').value.trim();
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pw = document.getElementById('regPassword').value;
+
+      if (!name) return showAlert('Please enter your full name.');
+      if (!username || username.length < 3) return showAlert('Username must be at least 3 characters.');
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) return showAlert('Username can only contain letters, numbers, and underscores.');
+      if (!email || !email.includes('@')) return showAlert('Please enter a valid email.');
+      if (pw.length < 8) return showAlert('Password must be at least 8 characters.');
+
+      showSection('signupStep2');
+    };
+
+    window.goToStep1 = function () { showSection('signupStep1'); };
+    window.goToStep3 = function () {
+      hideAlert();
+      if (selectedRoles.length === 0) return showAlert('Please select at least one skill role.');
+      showSection('signupStep3');
+    };
+
+    window.goToStep2 = window.goToStep2; // keep ref
+
+    window.handleCreateAccount = async function () {
+      hideAlert();
+      const agreeTerms = document.getElementById('agreeTerms').checked;
+      const agreeAge = document.getElementById('agreeAge').checked;
+      if (!agreeTerms || !agreeAge) return showAlert('Please tick both boxes to continue.');
+
+      const name = document.getElementById('regName').value.trim();
+      const username = document.getElementById('regUsername').value.trim().replace('@', '');
+      const email = document.getElementById('regEmail').value.trim();
+      const pw = document.getElementById('regPassword').value;
+
+      setLoading('createBtn', true, 'Create Account');
+      try {
+        // Check username availability
+        const taken = await usernameExists(username);
+        if (taken) {
+          showAlert('That username is already taken. Please choose another.');
+          setLoading('createBtn', false, 'Create Account');
+          return;
+        }
+
+        // Create auth user
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        const uid = cred.user.uid;
+
+        // Update display name
+        await updateProfile(cred.user, { displayName: name });
+
+        // Save profile to Firestore
+        await createUserProfile(uid, { name, username, email, roles: selectedRoles });
+
+        // Redirect
+        window.location.href = 'growth-partner.html';
+      } catch (err) {
+        const msgs = {
+          'auth/email-already-in-use': 'That email is already registered. Try signing in instead.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/weak-password': 'Password is too weak. Use at least 8 characters.',
+          'auth/network-request-failed': 'Network error. Check your connection and try again.',
+          'auth/too-many-requests': 'Too many requests. Please wait a moment and try again.'
+        };
+        showAlert(msgs[err.code] || `Sign up failed: ${err.message}`);
+      } finally {
+        setLoading('createBtn', false, 'Create Account');
+      }
+    };
+
+    // ---- Forgot password ----
+    window.handleForgot = async function () {
+      hideAlert();
+      const email = document.getElementById('forgotEmail').value.trim();
+      if (!email) return showAlert('Enter your email address.');
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showAlert('Reset link sent! Check your inbox.', 'success');
+      } catch (err) {
+        const msgs = {
+          'auth/user-not-found': 'No account found with that email.',
+          'auth/invalid-email': 'Please enter a valid email address.'
+        };
+        showAlert(msgs[err.code] || 'Failed to send reset email.');
+      }
+    };
+
+    // ---- UI helpers (exposed to onclick) ----
+    window.showForgot = function () { showSection('forgotSection'); hideAlert(); };
+    window.hideForgot = function () { showSection('signinSection'); hideAlert(); };
+
+    function showSection(id) {
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+</script>
+
+<script>
+    // Password strength
+    function checkPasswordStrength(val) {
+      const bars = [1,2,3,4].map(i => document.getElementById('pwBar'+i));
+      const label = document.getElementById('pwLabel');
+      bars.forEach(b => b.className = 'pw-bar');
+
+      if (!val) { label.textContent = ''; return; }
+
+      let strength = 0;
+      if (val.length >= 8) strength++;
+      if (/[A-Z]/.test(val)) strength++;
+      if (/[0-9]/.test(val)) strength++;
+      if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+      const cls = strength <= 1 ? 'weak' : strength <= 2 ? 'medium' : 'strong';
+      const txt = strength <= 1 ? 'Weak' : strength <= 2 ? 'Fair' : strength === 3 ? 'Good' : 'Strong';
+      const color = strength <= 1 ? '#e05c5c' : strength <= 2 ? '#e0a050' : '#52c47a';
+
+      for (let i = 0; i < strength; i++) bars[i].classList.add(cls);
+      label.textContent = txt;
+      label.style.color = color;
+    }
+
+    // Tab switch
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'signin') || (i === 1 && tab === 'signup'));
+      });
+      document.getElementById('alertBox').classList.remove('show');
+
+      const sects = document.querySelectorAll('.form-section');
+      sects.forEach(s => s.classList.remove('active'));
+      document.getElementById(tab === 'signin' ? 'signinSection' : 'signupStep1').classList.add('active');
+    }
+
+    // Enter key submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const active = document.querySelector('.form-section.active');
+      if (!active) return;
+      if (active.id === 'signinSection') window.handleSignIn?.();
+      if (active.id === 'forgotSection') window.handleForgot?.();
+    });
+</script>
+
+</body>
+</html>
