@@ -2350,20 +2350,32 @@
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceCandidatePoolSize: 10 });
     myPeerConns[remoteUid] = pc;
 
-    // Add our audio tracks
-    if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+    // CRITICAL: Add our audio tracks NOW — localStream must exist before calling this
+    if (localStream) {
+      localStream.getTracks().forEach(t => {
+        console.log('[Voice] Adding local track to pc:', t.kind, t.label);
+        pc.addTrack(t, localStream);
+      });
+    } else {
+      console.error('[Voice] localStream is null when creating peer conn!');
+    }
 
     // Receive their audio
     pc.ontrack = (event) => {
-      console.log('[Voice] Got remote track from', remoteUid);
-      playAudio(remoteUid, event.streams[0]);
-      document.getElementById('vpa-' + remoteUid)?.classList.add('speaking');
+      console.log('[Voice] Got remote track from', remoteUid, 'streams:', event.streams.length);
+      if (event.streams[0]) {
+        playAudio(remoteUid, event.streams[0]);
+      }
     };
 
-    // Send our ICE candidates to Firestore so the remote peer can use them
+    // ICE state logging
+    pc.oniceconnectionstatechange = () => {
+      console.log('[Voice] ICE state with', remoteUid, ':', pc.iceConnectionState);
+    };
+
+    // Send our ICE candidates to Firestore
     pc.onicecandidate = ({ candidate }) => {
       if (!candidate || !voiceRoomId) return;
-      // Store under OUR uid so the remote knows these are from us
       addDoc(
         collection(db, 'voiceRooms', voiceRoomId, 'ice_' + currentUser.uid + '_to_' + remoteUid),
         { c: candidate.toJSON(), ts: serverTimestamp() }
@@ -2371,13 +2383,13 @@
     };
 
     pc.onconnectionstatechange = () => {
-      console.log('[Voice] State with', remoteUid, ':', pc.connectionState);
+      console.log('[Voice] Connection state with', remoteUid, ':', pc.connectionState);
       if (['failed','disconnected','closed'].includes(pc.connectionState)) {
         removePeerUI(remoteUid);
       }
     };
 
-    // Collect their ICE candidates from Firestore
+    // Listen for their ICE candidates from Firestore
     if (iceUnsubs[remoteUid]) iceUnsubs[remoteUid]();
     iceUnsubs[remoteUid] = onSnapshot(
       collection(db, 'voiceRooms', voiceRoomId, 'ice_' + remoteUid + '_to_' + currentUser.uid),
@@ -2385,10 +2397,14 @@
         snap.docChanges().forEach(ch => {
           if (ch.type !== 'added') return;
           const c = ch.doc.data().c;
-          if (c) pc.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
+          if (c) {
+            pc.addIceCandidate(new RTCIceCandidate(c))
+              .then(() => console.log('[Voice] Added ICE candidate from', remoteUid))
+              .catch(e => console.warn('[Voice] ICE candidate error:', e.message));
+          }
         });
       },
-      ()=>{}
+      e => console.warn('[Voice] ICE listener error:', e.message)
     );
 
     return pc;
@@ -2397,47 +2413,62 @@
   // ── OFFER / ANSWER ───────────────────────────────────────────────────────
   async function sendOffer(remoteUid, remoteName) {
     if (myPeerConns[remoteUid]) return;
+    console.log('[Voice] Sending offer to', remoteName, remoteUid);
     addParticipantUI(remoteUid, remoteName);
+
+    // localStream MUST exist here — we get mic before calling this
     const pc = createPeerConn(remoteUid);
 
     const offer = await pc.createOffer({ offerToReceiveAudio: true });
     await pc.setLocalDescription(offer);
+    console.log('[Voice] Created offer, writing to Firestore...');
 
     await setDoc(
       doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
       { sdp: offer.sdp, type: offer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp() }
-    ).catch(e => console.warn('[Voice] offer write failed:', e.message));
+    ).catch(e => console.error('[Voice] Offer write failed:', e.message));
+
+    console.log('[Voice] Offer written, waiting for answer...');
 
     // Listen for their answer
     const answerRef = doc(db, 'voiceRooms', voiceRoomId, 'answers', remoteUid + '_to_' + currentUser.uid);
     const unsub = onSnapshot(answerRef, async (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
-      if (pc.signalingState !== 'have-local-offer') return;
+      if (pc.signalingState !== 'have-local-offer') {
+        console.warn('[Voice] Got answer but signalingState is', pc.signalingState);
+        return;
+      }
+      console.log('[Voice] Got answer from', remoteName, '- setting remote description');
       await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
-      console.log('[Voice] Set remote answer from', remoteName);
       unsub();
-    }, ()=>{});
+    }, e => console.warn('[Voice] Answer listener error:', e.message));
   }
 
   async function handleOffer(data) {
     const remoteUid = data.from;
-    if (myPeerConns[remoteUid]) return; // already connected
+    if (myPeerConns[remoteUid]) return;
+    console.log('[Voice] Handling incoming offer from', remoteUid);
 
     const remoteName = await getNameByUid(remoteUid);
     addParticipantUI(remoteUid, remoteName);
+
+    // localStream MUST exist here — mic is acquired before we watch for offers
     const pc = createPeerConn(remoteUid);
 
+    console.log('[Voice] Setting remote description (offer)...');
     await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
+
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
+    console.log('[Voice] Created answer, writing to Firestore...');
 
     await setDoc(
       doc(db, 'voiceRooms', voiceRoomId, 'answers', currentUser.uid + '_to_' + remoteUid),
       { sdp: answer.sdp, type: answer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp() }
-    ).catch(e => console.warn('[Voice] answer write failed:', e.message));
+    ).catch(e => console.error('[Voice] Answer write failed:', e.message));
 
-    console.log('[Voice] Sent answer to', remoteName);
+    console.log('[Voice] Answer written to Firestore for', remoteName);
   }
 
   async function getNameByUid(uid) {
@@ -2447,6 +2478,9 @@
   }
 
   // ── UI HELPERS ────────────────────────────────────────────────────────────
+  // Track all active analysers so we can stop them on leave
+  const speakingAnalysers = {};
+
   function playAudio(uid, stream) {
     let audio = document.getElementById('audio-' + uid);
     if (!audio) {
@@ -2458,6 +2492,73 @@
     }
     audio.srcObject = stream;
     audio.volume = VOLUME_LEVELS[volumeIdx];
+
+    // Real-time speaking detection via Web Audio AnalyserNode
+    try {
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.3;
+      source.connect(analyser);
+
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const avatar = () => document.getElementById('vpa-' + uid);
+      let speaking = false;
+
+      function detect() {
+        if (!document.getElementById('audio-' + uid)) {
+          // Audio element removed — stop loop
+          ctx.close();
+          return;
+        }
+        analyser.getByteFrequencyData(data);
+        // Average volume across frequency bins
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        const isSpeaking = avg > 8; // threshold — lower = more sensitive
+        if (isSpeaking !== speaking) {
+          speaking = isSpeaking;
+          avatar()?.classList.toggle('speaking', isSpeaking);
+        }
+        requestAnimationFrame(detect);
+      }
+      detect();
+      speakingAnalysers[uid] = ctx;
+    } catch(e) {
+      // Web Audio not available — fall back to always-on indicator
+      document.getElementById('vpa-' + uid)?.classList.add('speaking');
+    }
+  }
+
+  // Also detect speaking for local mic (self indicator)
+  function startSelfSpeakingDetection() {
+    if (!localStream) return;
+    try {
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(localStream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.3;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      let speaking = false;
+      speakingAnalysers['me'] = ctx;
+
+      function detect() {
+        if (!voiceInRoom) { ctx.close(); return; }
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        const isSpeaking = avg > 8;
+        const track = localStream?.getAudioTracks()[0];
+        const muted = track ? !track.enabled : false;
+        if (!muted && isSpeaking !== speaking) {
+          speaking = isSpeaking;
+          document.getElementById('vpa-me')?.classList.toggle('speaking', isSpeaking);
+        }
+        requestAnimationFrame(detect);
+      }
+      detect();
+    } catch(e) {}
   }
 
   function addParticipantUI(uid, name) {
@@ -2534,7 +2635,7 @@
     // 2. Show self
     document.getElementById('voiceParticipants').innerHTML = '';
     addParticipantUI('me', currentProfile?.name || 'You');
-    document.getElementById('vpa-me')?.classList.add('speaking');
+    startSelfSpeakingDetection();
 
     // 3. Write presence
     await setDoc(doc(db, 'voiceRooms', voiceRoomId, 'presence', currentUser.uid), {
@@ -2591,6 +2692,10 @@
 
     Object.keys(myPeerConns).forEach(uid => removePeerUI(uid));
     myPeerConns = {};
+
+    // Stop all speaking analysers
+    Object.values(speakingAnalysers).forEach(ctx => { try { ctx.close(); } catch(e){} });
+    Object.keys(speakingAnalysers).forEach(k => delete speakingAnalysers[k]);
 
     if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
     document.querySelectorAll('audio[id^="audio-"]').forEach(a => a.remove());
