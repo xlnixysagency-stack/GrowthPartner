@@ -1220,13 +1220,20 @@
     };
 
     // Renegotiate when tracks are added/removed (e.g. screen share start/stop)
+    // connectionEstablished flag prevents this from firing during the initial handshake
+    let connectionEstablished = false;
+    pc.onconnectionstatechange_orig = pc.onconnectionstatechange;
+
     pc.onnegotiationneeded = async () => {
-      // Only the higher UID renegotiates (same tie-breaking as initial call)
+      // Only renegotiate AFTER the initial connection is established
+      if (!connectionEstablished) return;
+      // Only the higher UID sends renegotiation offers (same tie-breaking rule)
       if (currentUser.uid < remoteUid) return;
       if (pc.signalingState !== 'stable') return;
       try {
         console.log('[Voice] Renegotiating with', remoteUid);
         const offer = await pc.createOffer();
+        if (pc.signalingState !== 'stable') return; // Check again after async
         await pc.setLocalDescription(offer);
         await setDoc(
           doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
@@ -1254,9 +1261,12 @@
       }
     };
 
-    // Log overall connection state
+    // Log overall connection state + mark when established
     pc.onconnectionstatechange = () => {
       console.log('[Voice] Connection state with', remoteUid, '→', pc.connectionState);
+      if (pc.connectionState === 'connected') {
+        connectionEstablished = true;
+      }
       if (['failed', 'closed'].includes(pc.connectionState)) {
         removePeer(remoteUid);
       }
