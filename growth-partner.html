@@ -2285,10 +2285,10 @@
   //   voiceRooms/{roomId}/connections/{connId}/iceCandidates — ICE candidates
   // ===========================
 
-  // TURN/STUN — relay audio when direct P2P fails (required for cross-network calls)
-  // Set this to your Render server URL once deployed
-  // e.g. 'https://growth-partner-turn.onrender.com'
-  const TURN_SERVER_URL = 'https://growthpartner.onrender.com';
+  // TURN/STUN — Xirsys free tier for reliable cross-network relay
+  const XIRSYS_IDENT  = 'identyesyes';
+  const XIRSYS_SECRET = '369e369e-1030-11f1-b6a0-0242ac150002';
+  const XIRSYS_CHANNEL = 'GrowthPartner';
 
   let ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -2296,33 +2296,39 @@
   ];
 
   async function fetchTURNServers() {
-    // Try Render server first
-    if (TURN_SERVER_URL && TURN_SERVER_URL !== 'YOUR_RENDER_URL') {
-      try {
-        const res = await fetch(`${TURN_SERVER_URL}/turn-credentials?uid=${currentUser?.uid || 'user'}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.iceServers?.length) {
-            ICE_SERVERS = data.iceServers;
-            console.log('[Voice] Got ICE servers from Render:', ICE_SERVERS.length);
-            return;
-          }
+    try {
+      const auth = btoa(`${XIRSYS_IDENT}:${XIRSYS_SECRET}`);
+      const res = await fetch(
+        `https://global.xirsys.net/_turn/${XIRSYS_CHANNEL}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Basic ' + auth,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ format: 'urls' })
         }
-      } catch(e) {
-        console.warn('[Voice] Render TURN fetch failed:', e.message);
+      );
+      if (!res.ok) throw new Error('Xirsys HTTP ' + res.status);
+      const data = await res.json();
+      if (data.v?.iceServers?.length) {
+        ICE_SERVERS = data.v.iceServers;
+        console.log('[Voice] Got', ICE_SERVERS.length, 'ICE servers from Xirsys');
+        return;
       }
+      throw new Error('No iceServers in Xirsys response');
+    } catch(e) {
+      console.warn('[Voice] Xirsys fetch failed, using fallback:', e.message);
+      // Fallback hardcoded servers
+      ICE_SERVERS = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+      ];
     }
-
-    // Fallback hardcoded TURN servers (less reliable but works most of the time)
-    ICE_SERVERS = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-    ];
-    console.log('[Voice] Using fallback TURN servers');
   }
 
   let localStream    = null;
