@@ -1479,8 +1479,9 @@
           if (data.uid === currentUser.uid) continue;
 
           if (change.type === 'added' && data.active !== false) {
-            // Peer was already here — call them
-            if (!peerConns[data.uid]) {
+            // Tie-breaking: higher UID is always the caller.
+            // This prevents both peers from sending offers simultaneously.
+            if (!peerConns[data.uid] && currentUser.uid > data.uid) {
               await sendOffer(data.uid, data.name || 'Member');
             }
           }
