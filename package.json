@@ -1,0 +1,12 @@
+{
+  "name": "growth-partner-turn",
+  "version": "1.0.0",
+  "description": "TURN credential server for Growth Partner voice rooms",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
