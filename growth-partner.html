@@ -708,18 +708,65 @@
     .join-voice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .leave-voice-btn {
-      padding: 11px 28px;
+      padding: 11px 20px;
       background: rgba(224,92,92,0.15);
       color: var(--error);
       border: 1px solid rgba(224,92,92,0.3);
       border-radius: 10px;
       font-family: 'DM Sans', sans-serif;
-      font-size: 14px; font-weight: 500;
+      font-size: 13px; font-weight: 500;
       cursor: pointer;
       transition: background 0.15s;
     }
 
     .leave-voice-btn:hover { background: rgba(224,92,92,0.25); }
+
+    /* Voice call control bar */
+    .call-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .call-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .call-btn-circle {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--surface3);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    .call-btn-circle:hover { background: var(--surface2); transform: scale(1.05); }
+    .call-btn-circle.active { background: var(--gold-glow); border-color: var(--gold); }
+    .call-btn-circle.danger { background: rgba(224,92,92,0.15); border-color: rgba(224,92,92,0.3); color: var(--error); }
+    .call-btn-circle.danger:hover { background: rgba(224,92,92,0.3); }
+    .call-btn-circle.muted { background: rgba(224,92,92,0.1); border-color: rgba(224,92,92,0.3); }
+    .call-btn-circle.sharing { background: rgba(82,196,122,0.1); border-color: rgba(82,196,122,0.3); color: var(--online); }
+
+    .call-btn-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .call-btn-circle.danger + .call-btn-label { color: var(--error); }
 
     .daily-frame-container {
       flex: 1;
@@ -2401,11 +2448,27 @@
     try {
       const snap = await getDocs(collection(db, 'users'));
       allMembers = [];
-      snap.forEach(d => allMembers.push({ uid: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const data = d.data();
+        // Skip deleted accounts — must have a name and not be flagged deleted
+        if (!data.name) return;
+        if (data.deleted === true) return;
+        // Skip ghost accounts — email required (all real signups have one)
+        if (!data.email) return;
+        allMembers.push({ uid: d.id, ...data });
+      });
+      console.log('[GP] Loaded', allMembers.length, 'members');
     } catch(e) {
       console.error('loadMembers error:', e);
       allMembers = [];
     }
+  }
+
+  // Call this when an account is deleted to mark it in Firestore
+  async function markAccountDeleted(uid) {
+    try {
+      await updateDoc(doc(db, 'users', uid), { deleted: true, name: null, email: null });
+    } catch(e) {}
   }
 
   function renderMembersList() {
@@ -2816,13 +2879,50 @@
     const myPeerId = makePeerId(currentUser.uid, currentChannel.id);
     console.log('[Voice] My peer ID:', myPeerId);
 
+    // Fetch free TURN credentials from Open Relay (Metered) — completely free tier
+    // These relay audio when direct peer-to-peer connection fails (fixes most "can't hear" issues)
+    let iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ];
+
+    try {
+      const turnRes = await fetch('https://growth-partner.metered.live/api/v1/turn/credentials?apiKey=openrelayproject');
+      if (turnRes.ok) {
+        const turnCreds = await turnRes.json();
+        iceServers = [...iceServers, ...turnCreds];
+        console.log('[Voice] TURN servers loaded:', turnCreds.length);
+      }
+    } catch(e) {
+      console.warn('[Voice] Could not fetch TURN servers, using STUN only:', e.message);
+    }
+
+    // Fallback hardcoded Open Relay TURN servers (always available, no key needed)
+    if (iceServers.length <= 2) {
+      iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:openrelay.metered.ca:80' },
+        { urls: 'turn:openrelay.metered.ca:80',        username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443',       username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+      ];
+      console.log('[Voice] Using fallback TURN servers');
+    }
+
     try {
       await new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(() => reject(new Error('PeerJS connection timed out')), 8000);
-        myPeer = new Peer(myPeerId, {
-          // Uses PeerJS free public server — no config needed
-          debug: 0
-        });
+        const timeoutId = setTimeout(() => reject(new Error('PeerJS connection timed out')), 12000);
+
+        function createPeer(id) {
+          return new Peer(id, {
+            debug: 0,
+            config: { iceServers, iceTransportPolicy: 'all' }
+          });
+        }
+
+        myPeer = createPeer(myPeerId);
+
         myPeer.on('open', (id) => {
           clearTimeout(timeoutId);
           console.log('[Voice] PeerJS connected, ID:', id);
@@ -2830,10 +2930,11 @@
         });
         myPeer.on('error', (e) => {
           clearTimeout(timeoutId);
-          // ID taken means we're already connected from another tab — just reconnect
+          console.warn('[Voice] PeerJS error type:', e.type);
+          // ID taken = already connected from another tab, make unique ID
           if (e.type === 'unavailable-id') {
             myPeer.destroy();
-            myPeer = new Peer(myPeerId + '-' + Date.now().toString(36), { debug: 0 });
+            myPeer = createPeer(myPeerId + Date.now().toString(36).slice(-4));
             myPeer.on('open', resolve);
             myPeer.on('error', reject);
           } else {
@@ -2906,21 +3007,108 @@
 
   function renderCallButtons() {
     document.getElementById('voiceBtns').innerHTML = `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center">
-        <button id="muteBtn" class="join-voice-btn" style="padding:10px 20px;font-size:13px" onclick="toggleMute()">🎤 Mute</button>
-        <button id="shareBtn" class="join-voice-btn" style="padding:10px 20px;font-size:13px;background:linear-gradient(135deg,var(--surface3),var(--surface2));color:var(--text);border:1px solid var(--border2)" onclick="toggleScreenShare()">🖥️ Share Screen</button>
-        <button class="leave-voice-btn" onclick="leaveVoice()">Leave</button>
+      <div class="call-controls">
+
+        <div class="call-btn">
+          <button class="call-btn-circle" id="muteBtn" onclick="toggleMute()" title="Mute / Unmute">
+            🎤
+          </button>
+          <span class="call-btn-label" id="muteLbl">Mute</span>
+        </div>
+
+        <div class="call-btn">
+          <button class="call-btn-circle" id="deafenBtn" onclick="toggleDeafen()" title="Deafen">
+            🔊
+          </button>
+          <span class="call-btn-label" id="deafenLbl">Deafen</span>
+        </div>
+
+        <div class="call-btn">
+          <button class="call-btn-circle" id="shareBtn" onclick="toggleScreenShare()" title="Share Screen">
+            🖥️
+          </button>
+          <span class="call-btn-label" id="shareLbl">Share</span>
+        </div>
+
+        <div class="call-btn">
+          <button class="call-btn-circle" id="volBtn" onclick="cycleVolume()" title="Volume">
+            🔉
+          </button>
+          <span class="call-btn-label" id="volLbl">Volume</span>
+        </div>
+
+        <div class="call-btn">
+          <button class="call-btn-circle danger" onclick="leaveVoice()" title="Leave">
+            📞
+          </button>
+          <span class="call-btn-label danger">Leave</span>
+        </div>
+
       </div>`;
   }
+
+  let isDeafened = false;
+  let volumeLevel = 1; // 0.5, 1, 1.5 cycle
+  const VOLUME_LEVELS = [0.5, 1, 1.5];
+  const VOLUME_ICONS = ['🔈', '🔉', '🔊'];
+  const VOLUME_LABELS = ['50%', '100%', '150%'];
+  let volumeIdx = 1;
 
   window.toggleMute = function() {
     if (!localStream) return;
     const track = localStream.getAudioTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
+    const isMuted = !track.enabled;
     const btn = document.getElementById('muteBtn');
-    if (btn) btn.textContent = track.enabled ? '🎤 Mute' : '🔇 Unmuted';
-    document.getElementById('vpa-me')?.classList.toggle('speaking', track.enabled);
+    const lbl = document.getElementById('muteLbl');
+    if (btn) {
+      btn.textContent = isMuted ? '🔇' : '🎤';
+      btn.classList.toggle('muted', isMuted);
+    }
+    if (lbl) lbl.textContent = isMuted ? 'Unmute' : 'Mute';
+    document.getElementById('vpa-me')?.classList.toggle('speaking', !isMuted);
+  };
+
+  window.toggleDeafen = function() {
+    isDeafened = !isDeafened;
+    // Mute/unmute all incoming audio elements
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => {
+      a.muted = isDeafened;
+    });
+    // Also mute our own mic when deafened (standard behaviour)
+    if (localStream) {
+      const track = localStream.getAudioTracks()[0];
+      if (track) track.enabled = !isDeafened;
+    }
+    const btn = document.getElementById('deafenBtn');
+    const lbl = document.getElementById('deafenLbl');
+    const muteBtn = document.getElementById('muteBtn');
+    const muteLbl = document.getElementById('muteLbl');
+    if (btn) {
+      btn.textContent = isDeafened ? '🔇' : '🔊';
+      btn.classList.toggle('active', isDeafened);
+    }
+    if (lbl) lbl.textContent = isDeafened ? 'Undeafen' : 'Deafen';
+    if (muteBtn) {
+      muteBtn.textContent = isDeafened ? '🔇' : '🎤';
+      muteBtn.classList.toggle('muted', isDeafened);
+    }
+    if (muteLbl) muteLbl.textContent = isDeafened ? 'Unmute' : 'Mute';
+  };
+
+  window.cycleVolume = function() {
+    volumeIdx = (volumeIdx + 1) % VOLUME_LEVELS.length;
+    const vol = VOLUME_LEVELS[volumeIdx];
+    // Apply to all incoming audio
+    document.querySelectorAll('audio[id^="audio-"]').forEach(a => {
+      a.volume = Math.min(vol, 1); // clamp to 1 for safety
+    });
+    const btn = document.getElementById('volBtn');
+    const lbl = document.getElementById('volLbl');
+    if (btn) btn.textContent = VOLUME_ICONS[volumeIdx];
+    if (lbl) lbl.textContent = VOLUME_LABELS[volumeIdx];
+    showToast('Volume: ' + VOLUME_LABELS[volumeIdx]);
   };
 
   // ── SCREEN SHARING ────────────────────────────────────────────────────────
@@ -3096,6 +3284,8 @@
 
   window.handleSignOut = async function() {
     if (!confirm('Sign out?')) return;
+    // Clean up voice if in a call
+    if (voiceInRoom) await leaveVoice();
     await signOut(auth);
     window.location.href = 'auth.html';
   };
