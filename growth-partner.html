@@ -2296,39 +2296,71 @@
   ];
 
   async function fetchTURNServers() {
-    try {
-      const auth = btoa(`${XIRSYS_IDENT}:${XIRSYS_SECRET}`);
-      const res = await fetch(
-        `https://global.xirsys.net/_turn/${XIRSYS_CHANNEL}`,
-        {
+    // Try all Xirsys API formats — they changed their API structure
+    const auth = btoa(`${XIRSYS_IDENT}:${XIRSYS_SECRET}`);
+    const attempts = [
+      // Format 1: newer Xirsys API
+      async () => {
+        const res = await fetch(`https://global.xirsys.net/_turn/${XIRSYS_CHANNEL}`, {
           method: 'PUT',
-          headers: {
-            'Authorization': 'Basic ' + auth,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Authorization': 'Basic ' + auth, 'Content-Type': 'application/json' },
           body: JSON.stringify({ format: 'urls' })
+        });
+        const data = await res.json();
+        console.log('[Voice] Xirsys format 1 response:', JSON.stringify(data));
+        // Handle both response shapes
+        const servers = data.v?.iceServers || data.v?.ice_servers || (Array.isArray(data.v) ? data.v : null);
+        if (servers?.length) return servers;
+        // Sometimes Xirsys returns urls directly in data.v
+        if (data.v?.uris) {
+          return [{
+            urls: data.v.uris,
+            username: data.v.username,
+            credential: data.v.password
+          }];
         }
-      );
-      if (!res.ok) throw new Error('Xirsys HTTP ' + res.status);
-      const data = await res.json();
-      if (data.v?.iceServers?.length) {
-        ICE_SERVERS = data.v.iceServers;
-        console.log('[Voice] Got', ICE_SERVERS.length, 'ICE servers from Xirsys');
-        return;
+        return null;
+      },
+      // Format 2: older Xirsys API
+      async () => {
+        const res = await fetch(`https://global.xirsys.net/_turn/${XIRSYS_CHANNEL}`, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Basic ' + auth }
+        });
+        const data = await res.json();
+        console.log('[Voice] Xirsys format 2 response:', JSON.stringify(data));
+        if (data.v?.iceServers?.length) return data.v.iceServers;
+        return null;
       }
-      throw new Error('No iceServers in Xirsys response');
-    } catch(e) {
-      console.warn('[Voice] Xirsys fetch failed, using fallback:', e.message);
-      // Fallback hardcoded servers
-      ICE_SERVERS = [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-      ];
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        const servers = await attempt();
+        if (servers?.length) {
+          ICE_SERVERS = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            ...servers
+          ];
+          console.log('[Voice] Got', ICE_SERVERS.length, 'ICE servers from Xirsys ✅');
+          return;
+        }
+      } catch(e) {
+        console.warn('[Voice] Xirsys attempt failed:', e.message);
+      }
     }
+
+    // All Xirsys attempts failed — use hardcoded fallback
+    console.warn('[Voice] Xirsys unavailable, using fallback TURN servers');
+    ICE_SERVERS = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+    ];
   }
 
   let localStream    = null;
