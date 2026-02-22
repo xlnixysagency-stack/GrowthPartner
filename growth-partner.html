@@ -1208,11 +1208,32 @@
       console.error('[Voice] localStream is null! Cannot add tracks.');
     }
 
-    // Receive remote audio
+    // Receive remote audio and video
     pc.ontrack = event => {
-      console.log('[Voice] Received remote track from', remoteUid);
-      if (event.streams && event.streams[0]) {
+      console.log('[Voice] Received remote track from', remoteUid, '— kind:', event.track.kind);
+      if (!event.streams || !event.streams[0]) return;
+      if (event.track.kind === 'audio') {
         attachRemoteAudio(remoteUid, event.streams[0]);
+      } else if (event.track.kind === 'video') {
+        attachRemoteVideo(remoteUid, event.streams[0]);
+      }
+    };
+
+    // Renegotiate when tracks are added/removed (e.g. screen share start/stop)
+    pc.onnegotiationneeded = async () => {
+      // Only the higher UID renegotiates (same tie-breaking as initial call)
+      if (currentUser.uid < remoteUid) return;
+      if (pc.signalingState !== 'stable') return;
+      try {
+        console.log('[Voice] Renegotiating with', remoteUid);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await setDoc(
+          doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
+          { sdp: offer.sdp, type: offer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp(), renegotiate: true }
+        );
+      } catch(e) {
+        console.warn('[Voice] Renegotiation failed:', e.message);
       }
     };
 
@@ -1293,6 +1314,28 @@
     startSpeakingDetection(uid, stream);
   }
 
+  // ── Attach remote screen share video ──────────────────────────────────────
+  function attachRemoteVideo(uid, stream) {
+    console.log('[Voice] Attaching remote video from', uid);
+    // Show the screenshare container with their video
+    const container = document.getElementById('screenshareContainer');
+    const vid = document.getElementById('screenVideo');
+    if (!container || !vid) return;
+    // Only show if not already sharing our own screen
+    if (screenStream) return;
+    vid.srcObject = stream;
+    vid.muted = true;
+    container.classList.add('active');
+    const label = document.getElementById('screenshareLabel');
+    const name = allMembers.find(m => m.uid === uid)?.name || 'Someone';
+    if (label) label.textContent = name + ' is sharing their screen';
+    // Hide when the track ends
+    stream.getVideoTracks()[0].onended = () => {
+      container.classList.remove('active');
+      vid.srcObject = null;
+    };
+  }
+
   // ── Speaking detection via AnalyserNode ───────────────────────────────────
   function startSpeakingDetection(uid, stream) {
     // Stop any existing context for this uid
@@ -1343,39 +1386,48 @@
 
     console.log('[Voice] Offer sent — waiting for answer...');
 
-    // Listen for their answer
-    const answerPath = doc(db, 'voiceRooms', voiceRoomId, 'answers', `${remoteUid}_to_${currentUser.uid}`);
+    // Listen for their answer (works for both initial and renegotiation)
+    const answerPath = doc(db, 'voiceRooms', voiceRoomId, 'answers', remoteUid + '_to_' + currentUser.uid);
     const unsub = onSnapshot(answerPath, async snap => {
       if (!snap.exists()) return;
       if (pc.signalingState !== 'have-local-offer') return;
       const d = snap.data();
-      console.log('[Voice] Got answer from', remoteName);
-      await pc.setRemoteDescription(new RTCSessionDescription({ type: d.type, sdp: d.sdp }));
+      console.log('[Voice] Got answer from', remoteName || remoteUid);
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: d.type, sdp: d.sdp }));
+      } catch(e) {
+        console.warn('[Voice] setRemoteDescription answer failed:', e.message);
+      }
       unsub();
     });
   }
 
-  // ── Handle incoming offer (they joined after us) ───────────────────────────
+  // ── Handle incoming offer (new connection OR renegotiation) ───────────────
   async function handleOffer(data) {
     const remoteUid = data.from;
-    if (peerConns[remoteUid]) return; // Already connected
+    const isRenegotiation = data.renegotiate === true;
 
-    const remoteName = await getNameByUid(remoteUid);
-    console.log('[Voice] Handling offer from', remoteName, '(', remoteUid, ')');
-
-    addParticipantUI(remoteUid, remoteName);
-    const pc = createPeerConn(remoteUid);
+    // For renegotiation, use existing peer conn. For new connection, create one.
+    let pc = peerConns[remoteUid];
+    if (!pc) {
+      if (isRenegotiation) { console.warn('[Voice] Renegotiation offer but no peer conn found, ignoring'); return; }
+      const remoteName = await getNameByUid(remoteUid);
+      console.log('[Voice] Handling new offer from', remoteName, '(', remoteUid, ')');
+      addParticipantUI(remoteUid, remoteName);
+      pc = createPeerConn(remoteUid);
+    } else {
+      console.log('[Voice] Handling renegotiation offer from', remoteUid);
+    }
 
     await pc.setRemoteDescription(new RTCSessionDescription({ type: data.type, sdp: data.sdp }));
-
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
     await setDoc(
-      doc(db, 'voiceRooms', voiceRoomId, 'answers', `${currentUser.uid}_to_${remoteUid}`),
+      doc(db, 'voiceRooms', voiceRoomId, 'answers', currentUser.uid + '_to_' + remoteUid),
       { sdp: answer.sdp, type: answer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp() }
     );
-    console.log('[Voice] Answer sent to', remoteName);
+    console.log('[Voice] Answer sent to', remoteUid);
   }
 
   async function getNameByUid(uid) {
@@ -1611,8 +1663,18 @@
   // ── Screen share ───────────────────────────────────────────────────────────
   window.toggleScreenShare = async function() {
     if (screenStream) {
+      // Stop all screen tracks
       screenStream.getTracks().forEach(t => t.stop());
       screenStream = null;
+
+      // Remove video senders from all peer connections — triggers onnegotiationneeded renegotiation
+      Object.entries(peerConns).forEach(([uid, pc]) => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
+          try { pc.removeTrack(sender); } catch(e) {}
+        }
+      });
+
       document.getElementById('screenshareContainer').classList.remove('active');
       document.getElementById('screenVideo').srcObject = null;
       const btn = document.getElementById('shareBtn');
@@ -1620,28 +1682,41 @@
       showToast('Screen sharing stopped');
       return;
     }
+
     try {
-      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: false });
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
     } catch(e) {
       if (e.name !== 'NotAllowedError') showToast('Screen sharing unavailable');
       return;
     }
+
+    const vt = screenStream.getVideoTracks()[0];
+    if (!vt) return;
+
+    // Show locally
     const vid = document.getElementById('screenVideo');
     const container = document.getElementById('screenshareContainer');
     vid.srcObject = screenStream;
     vid.muted = true;
     container.classList.add('active');
     document.getElementById('screenshareLabel').textContent = (currentProfile?.name || 'You') + ' is sharing';
+
+    // Add video track to all peer connections — onnegotiationneeded fires and renegotiates
     Object.entries(peerConns).forEach(([uid, pc]) => {
-      const vt = screenStream.getVideoTracks()[0];
-      if (!vt) return;
-      const sender = pc.getSenders().find(s => s.track?.kind === 'video');
-      if (sender) sender.replaceTrack(vt);
-      else pc.addTrack(vt, screenStream);
+      const existingSender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (existingSender) {
+        existingSender.replaceTrack(vt);
+      } else {
+        pc.addTrack(vt, screenStream);
+      }
     });
+
     const btn = document.getElementById('shareBtn');
     if (btn) { btn.textContent = '🔴'; btn.classList.add('sharing'); }
-    screenStream.getVideoTracks()[0].onended = () => window.toggleScreenShare();
+
+    // Auto-stop when user clicks browser's "Stop sharing" button
+    vt.onended = () => window.toggleScreenShare();
+
     showToast('Screen sharing started');
   };
 
