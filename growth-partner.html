@@ -199,13 +199,76 @@
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
     }
 
     .voice-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
+      background: var(--gold-dim);
+    }
+
+    .voice-dot.live {
       background: var(--online);
+      box-shadow: 0 0 4px rgba(82,196,122,0.6);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+
+    /* Mini avatars in sidebar for voice presence */
+    .sidebar-voice-avatars {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: -4px;
+    }
+
+    .sidebar-voice-av {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      border: 1.5px solid var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; font-weight: 700; color: #0C0C0E;
+      margin-left: -5px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-voice-av:first-child { margin-left: 0; }
+
+    .sidebar-voice-count {
+      font-size: 10px; font-weight: 600;
+      color: var(--online);
+      margin-left: 4px;
+    }
+
+    /* Screen share video */
+    .screenshare-container {
+      width: 100%;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: none;
+      position: relative;
+    }
+
+    .screenshare-container.active { display: block; }
+
+    #screenVideo {
+      width: 100%;
+      max-height: 340px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .screenshare-label {
+      position: absolute;
+      top: 8px; left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 4px;
+      display: flex; align-items: center; gap: 5px;
     }
 
     /* User bar */
@@ -1484,11 +1547,18 @@
             <div class="voice-room-icon" id="voiceRoomIcon">🎙️</div>
             <div class="voice-room-title" id="voiceRoomTitle">Voice Room 1</div>
             <div class="voice-room-sub" id="voiceRoomSub">Free audio calls · No setup needed</div>
+
+            <!-- Screen share video (shown when active) -->
+            <div class="screenshare-container" id="screenshareContainer">
+              <video id="screenVideo" autoplay playsinline muted></video>
+              <div class="screenshare-label"><span class="live-dot" style="background:var(--error)"></span><span id="screenshareWho">Sharing screen</span></div>
+            </div>
+
             <div class="voice-participants" id="voiceParticipants"></div>
             <div id="voiceBtns">
               <button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>
             </div>
-            <p style="font-size:12px;color:var(--muted);margin-top:-4px">Audio only · Peer-to-peer · Completely free</p>
+            <p style="font-size:12px;color:var(--muted);margin-top:-4px">Audio · Screen share · Peer-to-peer · Free</p>
           </div>
         </div>
       </div>
@@ -1927,8 +1997,72 @@
       if (first) selectChannel(first);
     } catch(e) { console.error('[GP] selectChannel:', e); }
 
+    // Start watching all voice rooms so sidebar shows who's inside
+    watchAllVoiceRooms();
+
     // Update last active (non-blocking)
     updateDoc(doc(db, 'users', currentUser.uid), { lastActive: serverTimestamp() }).catch(()=>{});
+  }
+
+  // Watch all voice rooms globally so sidebar always shows live presence
+  const voiceRoomGlobalUnsubs = {};
+
+  function watchAllVoiceRooms() {
+    const voiceChannels = CHANNELS.filter(c => c.isVoice);
+    voiceChannels.forEach(ch => {
+      if (voiceRoomGlobalUnsubs[ch.id]) return; // already watching
+      voiceRoomGlobalUnsubs[ch.id] = onSnapshot(
+        collection(db, 'voiceRooms', ch.id, 'presence'),
+        (snap) => {
+          const active = [];
+          snap.forEach(d => {
+            const data = d.data();
+            if (data.active !== false) active.push(data);
+          });
+          updateSidebarVoicePresence(ch.id, active);
+        },
+        () => {} // silently ignore errors
+      );
+    });
+  }
+
+  function updateSidebarVoicePresence(channelId, members) {
+    const indicator = document.getElementById('vi-' + channelId);
+    const dot = document.getElementById('vdot-' + channelId);
+    if (!indicator) return;
+
+    // Clear previous
+    indicator.innerHTML = '';
+
+    if (members.length === 0) {
+      // Empty — just show dim dot
+      indicator.innerHTML = `<span class="voice-dot" id="vdot-${channelId}"></span>`;
+      return;
+    }
+
+    // Live dot
+    indicator.innerHTML = `<span class="voice-dot live" id="vdot-${channelId}"></span>`;
+
+    // Show up to 3 mini avatars
+    const shown = members.slice(0, 3);
+    const extra = members.length - shown.length;
+    const avContainer = document.createElement('span');
+    avContainer.className = 'sidebar-voice-avatars';
+    shown.forEach(m => {
+      const av = document.createElement('span');
+      av.className = 'sidebar-voice-av';
+      av.title = m.name || 'Member';
+      av.textContent = initials(m.name || '?');
+      avContainer.appendChild(av);
+    });
+    indicator.appendChild(avContainer);
+
+    if (extra > 0) {
+      const cnt = document.createElement('span');
+      cnt.className = 'sidebar-voice-count';
+      cnt.textContent = '+' + extra;
+      indicator.appendChild(cnt);
+    }
   }
 
   // ===== SIDEBAR =====
@@ -1957,7 +2091,7 @@
         item.id = 'ch-' + ch.id;
         item.innerHTML = `<span class="channel-icon">${ch.icon}</span>${ch.label}`;
         if (ch.isVoice) {
-          item.innerHTML += `<span class="voice-indicator"><span class="voice-dot"></span></span>`;
+          item.innerHTML += `<span class="voice-indicator" id="vi-${ch.id}"><span class="voice-dot" id="vdot-${ch.id}"></span></span>`;
         }
         item.onclick = () => { selectChannel(ch); closeSidebar(); };
         grp.appendChild(item);
@@ -2616,7 +2750,59 @@
 
     // 2. Get microphone
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          // Higher sample rate = better frequency range
+          sampleRate: 48000,
+          sampleSize: 16,
+          channelCount: 1,           // mono is better for voice calls
+          // Noise suppression — removes background hiss
+          noiseSuppression: true,
+          // Echo cancellation — stops your speakers feeding back into mic
+          echoCancellation: true,
+          // Auto gain control — keeps volume consistent even if you move away from mic
+          autoGainControl: true,
+          // Latency hint — prioritise low latency over quality consistency
+          latency: 0.01
+        },
+        video: false
+      });
+
+      // Apply Web Audio API processing for even better quality
+      try {
+        const audioCtx = new AudioContext({ sampleRate: 48000 });
+        const source = audioCtx.createMediaStreamSource(localStream);
+
+        // Dynamics compressor — evens out loud/quiet moments
+        const compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
+        compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+        compressor.ratio.setValueAtTime(4, audioCtx.currentTime);
+        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+        compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+        // High-pass filter — cuts out low rumble (desk thumps, AC hum) below 80Hz
+        const highPass = audioCtx.createBiquadFilter();
+        highPass.type = 'highpass';
+        highPass.frequency.setValueAtTime(80, audioCtx.currentTime);
+        highPass.Q.setValueAtTime(0.7, audioCtx.currentTime);
+
+        // Destination stream to use instead of raw mic
+        const destination = audioCtx.createMediaStreamDestination();
+        source.connect(highPass);
+        highPass.connect(compressor);
+        compressor.connect(destination);
+
+        // Replace raw mic stream with processed stream
+        const processedStream = destination.stream;
+        // Keep video tracks (none) + replace audio with processed
+        localStream = new MediaStream([
+          ...processedStream.getAudioTracks()
+        ]);
+      } catch(audioErr) {
+        // Web Audio processing failed — fall back to raw mic, still works fine
+        console.warn('[Voice] Web Audio processing unavailable:', audioErr.message);
+      }
     } catch(e) {
       const msg = e.name === 'NotAllowedError'
         ? 'Microphone blocked — allow mic access in your browser settings'
@@ -2664,17 +2850,42 @@
       return;
     }
 
-    // 4. Answer incoming calls
+    // 4. Answer incoming calls (audio + screen share)
     myPeer.on('call', (call) => {
-      call.answer(localStream);
-      voiceCalls[call.peer] = call;
-      call.on('stream', (remoteStream) => {
-        const name = voicePeerNames[call.peer] || 'Member';
-        addParticipantUI(call.peer, name);
-        playAudio(call.peer, remoteStream);
-        document.getElementById('vpa-' + call.peer)?.classList.add('speaking');
-      });
-      call.on('close', () => removePeerUI(call.peer));
+      const isScreen = call.metadata?.type === 'screen';
+
+      if (isScreen) {
+        // Screen share — don't answer with our stream, just receive
+        call.answer();
+        call.on('stream', (remoteStream) => {
+          const vid = document.getElementById('screenVideo');
+          const container = document.getElementById('screenshareContainer');
+          const sharerName = call.metadata?.name || voicePeerNames[call.peer] || 'Someone';
+          if (vid && container) {
+            vid.srcObject = remoteStream;
+            vid.muted = false;
+            container.classList.add('active');
+            document.getElementById('screenshareWho').textContent = sharerName + ' is sharing';
+          }
+        });
+        call.on('close', () => {
+          const container = document.getElementById('screenshareContainer');
+          const vid = document.getElementById('screenVideo');
+          if (container) container.classList.remove('active');
+          if (vid) vid.srcObject = null;
+        });
+      } else {
+        // Regular audio call
+        call.answer(localStream);
+        voiceCalls[call.peer] = call;
+        call.on('stream', (remoteStream) => {
+          const name = voicePeerNames[call.peer] || 'Member';
+          addParticipantUI(call.peer, name);
+          playAudio(call.peer, remoteStream);
+          document.getElementById('vpa-' + call.peer)?.classList.add('speaking');
+        });
+        call.on('close', () => removePeerUI(call.peer));
+      }
     });
 
     voiceInRoom = true;
@@ -2689,14 +2900,18 @@
     watchRoomPresence(currentChannel.id);
 
     // 7. Update buttons
-    document.getElementById('voiceBtns').innerHTML = `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-        <button id="muteBtn" class="join-voice-btn" style="padding:11px 28px;font-size:14px" onclick="toggleMute()">🎤 Mute</button>
-        <button class="leave-voice-btn" onclick="leaveVoice()">Leave Room</button>
-      </div>`;
-
+    renderCallButtons();
     awardPoints(currentUser?.uid, 3);
   };
+
+  function renderCallButtons() {
+    document.getElementById('voiceBtns').innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center">
+        <button id="muteBtn" class="join-voice-btn" style="padding:10px 20px;font-size:13px" onclick="toggleMute()">🎤 Mute</button>
+        <button id="shareBtn" class="join-voice-btn" style="padding:10px 20px;font-size:13px;background:linear-gradient(135deg,var(--surface3),var(--surface2));color:var(--text);border:1px solid var(--border2)" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+        <button class="leave-voice-btn" onclick="leaveVoice()">Leave</button>
+      </div>`;
+  }
 
   window.toggleMute = function() {
     if (!localStream) return;
@@ -2704,9 +2919,86 @@
     if (!track) return;
     track.enabled = !track.enabled;
     const btn = document.getElementById('muteBtn');
-    if (btn) btn.textContent = track.enabled ? '🎤 Mute' : '🔇 Unmute';
+    if (btn) btn.textContent = track.enabled ? '🎤 Mute' : '🔇 Unmuted';
     document.getElementById('vpa-me')?.classList.toggle('speaking', track.enabled);
   };
+
+  // ── SCREEN SHARING ────────────────────────────────────────────────────────
+  let screenStream = null;
+  let screenCalls = {};   // peerId -> MediaConnection for screen
+
+  window.toggleScreenShare = async function() {
+    if (screenStream) {
+      stopScreenShare();
+      return;
+    }
+
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false  // system audio requires extra permission, skip for now
+      });
+    } catch(e) {
+      if (e.name !== 'NotAllowedError') showToast('Screen sharing not available in this browser');
+      return;
+    }
+
+    // Show local preview
+    const vid = document.getElementById('screenVideo');
+    const container = document.getElementById('screenshareContainer');
+    if (vid && container) {
+      vid.srcObject = screenStream;
+      vid.muted = true;
+      container.classList.add('active');
+      document.getElementById('screenshareWho').textContent = (currentProfile?.name || 'You') + ' is sharing';
+    }
+
+    // Send screen video to all peers
+    Object.keys(voiceCalls).forEach(peerId => {
+      if (!myPeer) return;
+      const call = myPeer.call(peerId, screenStream, { metadata: { type: 'screen', name: currentProfile?.name || 'Member' } });
+      if (call) {
+        screenCalls[peerId] = call;
+        call.on('close', () => { delete screenCalls[peerId]; });
+      }
+    });
+
+    // Update button
+    const btn = document.getElementById('shareBtn');
+    if (btn) {
+      btn.textContent = '🔴 Stop Sharing';
+      btn.style.background = 'rgba(224,92,92,0.15)';
+      btn.style.color = 'var(--error)';
+      btn.style.borderColor = 'rgba(224,92,92,0.3)';
+    }
+
+    // Auto-stop if user closes the browser share dialog
+    screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
+    showToast('Screen sharing started');
+  };
+
+  function stopScreenShare() {
+    if (screenStream) {
+      screenStream.getTracks().forEach(t => t.stop());
+      screenStream = null;
+    }
+    Object.values(screenCalls).forEach(c => { try { c.close(); } catch(e) {} });
+    Object.assign(screenCalls, {});
+
+    const container = document.getElementById('screenshareContainer');
+    const vid = document.getElementById('screenVideo');
+    if (container) container.classList.remove('active');
+    if (vid) vid.srcObject = null;
+
+    const btn = document.getElementById('shareBtn');
+    if (btn) {
+      btn.textContent = '🖥️ Share Screen';
+      btn.style.background = 'linear-gradient(135deg,var(--surface3),var(--surface2))';
+      btn.style.color = 'var(--text)';
+      btn.style.borderColor = 'var(--border2)';
+    }
+    showToast('Screen sharing stopped');
+  }
 
   window.leaveVoice = async function() {
     voiceInRoom = false;
@@ -2725,6 +3017,11 @@
     // Remove from Firestore presence
     if (currentChannel?.id) await leaveRoomPresence(currentChannel.id);
     // Reset UI
+    // Stop screen share if active
+    if (screenStream) stopScreenShare();
+    Object.values(screenCalls).forEach(c => { try { c.close(); } catch(e) {} });
+    Object.assign(screenCalls, {});
+
     document.getElementById('voiceParticipants').innerHTML = '';
     document.getElementById('voiceRoomSub').textContent = 'Free audio calls · No setup needed';
     document.getElementById('voiceBtns').innerHTML = `<button class="join-voice-btn" id="joinVoiceBtn" onclick="joinVoice()">🎤 Join Voice Room</button>`;
