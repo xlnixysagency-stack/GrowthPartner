@@ -2422,19 +2422,46 @@
     };
 
     // Listen for their ICE candidates from Firestore
+    // Queue candidates until remote description is set to avoid timing errors
+    const icePending = [];
+    let remoteReady = false;
+
+    async function drainIcePending() {
+      while (icePending.length > 0) {
+        const c = icePending.shift();
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(c));
+        } catch(e) {
+          // Ignore — stale candidates after connection closes
+        }
+      }
+    }
+
+    // Patch setRemoteDescription to flush pending candidates after it resolves
+    const origSetRemote = pc.setRemoteDescription.bind(pc);
+    pc.setRemoteDescription = async (...args) => {
+      await origSetRemote(...args);
+      remoteReady = true;
+      await drainIcePending();
+    };
+
     if (iceUnsubs[remoteUid]) iceUnsubs[remoteUid]();
     iceUnsubs[remoteUid] = onSnapshot(
       collection(db, 'voiceRooms', voiceRoomId, 'ice_' + remoteUid + '_to_' + currentUser.uid),
-      (snap) => {
-        snap.docChanges().forEach(ch => {
-          if (ch.type !== 'added') return;
+      async (snap) => {
+        for (const ch of snap.docChanges()) {
+          if (ch.type !== 'added') continue;
           const c = ch.doc.data().c;
-          if (c) {
-            pc.addIceCandidate(new RTCIceCandidate(c))
-              .then(() => console.log('[Voice] Added ICE candidate from', remoteUid))
-              .catch(e => console.warn('[Voice] ICE candidate error:', e.message));
+          if (!c) continue;
+          if (remoteReady && pc.remoteDescription) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(c));
+            } catch(e) {}
+          } else {
+            // Queue it — remote description not set yet
+            icePending.push(c);
           }
-        });
+        }
       },
       e => console.warn('[Voice] ICE listener error:', e.message)
     );
