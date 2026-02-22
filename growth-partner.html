@@ -1152,20 +1152,77 @@
   //     voiceRooms/{room}/signals/{from}_{to}      — offer/answer/candidate
   // ==========================================================================
 
-  // Free TURN servers — no API key needed
-  const FREE_ICE_SERVERS = [
+  // ── Xirsys credentials ───────────────────────────────────────────────────
+  const XIRSYS_IDENT   = 'yesyes';
+  const XIRSYS_SECRET  = '369e369e-1030-11f1-b6a0-0242ac150002';
+  const XIRSYS_CHANNEL = 'GrowthPartner';
+
+  // Fallback if Xirsys is unreachable
+  const FALLBACK_ICE = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun3.l.google.com:19302' },
-    // Open Relay — completely free, no account needed
     { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
     { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-    { urls: 'turn:openrelay.metered.ca:80?transport=tcp',  username: 'openrelayproject', credential: 'openrelayproject' },
   ];
 
+  // Browser equivalent of the Node.js Xirsys snippet:
+  //   PUT https://global.xirsys.net/_turn/GrowthPartner
+  //   Authorization: Basic base64(ident:secret)
+  //   Body: { format: "urls" }
+  async function fetchICEServers() {
+    try {
+      const res = await fetch('https://global.xirsys.net/_turn/' + XIRSYS_CHANNEL, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Basic ' + btoa(XIRSYS_IDENT + ':' + XIRSYS_SECRET),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ format: 'urls' })
+      });
+
+      const json = await res.json();
+      console.log('[Voice] Xirsys ICE List:', JSON.stringify(json));
+
+      // Response shape: { v: { iceServers: { urls: [...], username, credential } }, s: "ok" }
+      const srv = json?.v?.iceServers;
+
+      if (srv && !Array.isArray(srv) && Array.isArray(srv.urls) && srv.urls.length) {
+        // Format 1 — object with urls array (matches the Node snippet response)
+        ICE_SERVERS = [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: srv.urls, username: srv.username, credential: srv.credential }
+        ];
+        console.log('[Voice] Xirsys OK ✅ —', srv.urls.length, 'ICE URLs loaded');
+        return;
+      }
+
+      if (Array.isArray(srv) && srv.length) {
+        // Format 2 — array of server objects with .url (not .urls)
+        const mapped = srv.map(s => ({
+          urls: s.urls || s.url,
+          username: s.username,
+          credential: s.credential
+        })).filter(s => s.urls);
+        if (mapped.length) {
+          ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }, ...mapped];
+          console.log('[Voice] Xirsys OK (format 2) ✅ —', mapped.length, 'servers loaded');
+          return;
+        }
+      }
+
+      console.warn('[Voice] Xirsys: unexpected response shape, using fallback');
+    } catch(e) {
+      console.warn('[Voice] Xirsys fetch failed:', e.message, '— using Open Relay fallback');
+    }
+
+    ICE_SERVERS = FALLBACK_ICE;
+    console.log('[Voice] Using fallback TURN servers');
+  }
+
   // ── Voice state ──────────────────────────────────────────────────────────
+  let ICE_SERVERS    = FALLBACK_ICE;  // populated at join time by fetchICEServers()
   let localStream    = null;   // microphone stream
   let peerConns      = {};     // uid → { pc: RTCPeerConnection, makingOffer: bool, ignoreOffer: bool, isPolite: bool }
   let signalUnsubs   = {};     // uid → Firestore unsub
@@ -1187,7 +1244,7 @@
     console.log(`[Voice] Creating peer for ${remoteUid} — I am ${isPolite ? 'polite' : 'impolite'}`);
 
     const pc = new RTCPeerConnection({
-      iceServers: FREE_ICE_SERVERS,
+      iceServers: ICE_SERVERS,
       iceCandidatePoolSize: 10,
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require'
@@ -1471,6 +1528,9 @@
     const btn = document.getElementById('joinVoiceBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Connecting...'; }
     voiceRoomId = currentChannel.id;
+
+    // Fetch Xirsys TURN servers first (browser equivalent of Node.js snippet)
+    await fetchICEServers();
 
     // Get microphone
     try {
