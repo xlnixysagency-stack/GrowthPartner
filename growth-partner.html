@@ -1219,30 +1219,7 @@
       }
     };
 
-    // Renegotiate when tracks are added/removed (e.g. screen share start/stop)
-    // connectionEstablished flag prevents this from firing during the initial handshake
-    let connectionEstablished = false;
-    pc.onconnectionstatechange_orig = pc.onconnectionstatechange;
 
-    pc.onnegotiationneeded = async () => {
-      // Only renegotiate AFTER the initial connection is established
-      if (!connectionEstablished) return;
-      // Only the higher UID sends renegotiation offers (same tie-breaking rule)
-      if (currentUser.uid < remoteUid) return;
-      if (pc.signalingState !== 'stable') return;
-      try {
-        console.log('[Voice] Renegotiating with', remoteUid);
-        const offer = await pc.createOffer();
-        if (pc.signalingState !== 'stable') return; // Check again after async
-        await pc.setLocalDescription(offer);
-        await setDoc(
-          doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
-          { sdp: offer.sdp, type: offer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp(), renegotiate: true }
-        );
-      } catch(e) {
-        console.warn('[Voice] Renegotiation failed:', e.message);
-      }
-    };
 
     // ICE candidate → write to Firestore
     pc.onicecandidate = ({ candidate }) => {
@@ -1261,12 +1238,9 @@
       }
     };
 
-    // Log overall connection state + mark when established
+    // Log overall connection state
     pc.onconnectionstatechange = () => {
       console.log('[Voice] Connection state with', remoteUid, '→', pc.connectionState);
-      if (pc.connectionState === 'connected') {
-        connectionEstablished = true;
-      }
       if (['failed', 'closed'].includes(pc.connectionState)) {
         removePeer(remoteUid);
       }
@@ -1670,6 +1644,26 @@
     showToast(isDeafened ? 'Deafened' : 'Undeafened');
   };
 
+  // ── Manual renegotiation (called explicitly by screen share) ─────────────
+  async function renegotiateAll() {
+    for (const [remoteUid, pc] of Object.entries(peerConns)) {
+      // Only higher UID sends the offer
+      if (currentUser.uid < remoteUid) continue;
+      if (pc.signalingState !== 'stable') continue;
+      try {
+        console.log('[Voice] Renegotiating with', remoteUid);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await setDoc(
+          doc(db, 'voiceRooms', voiceRoomId, 'offers', currentUser.uid + '_to_' + remoteUid),
+          { sdp: offer.sdp, type: offer.type, from: currentUser.uid, to: remoteUid, ts: serverTimestamp(), renegotiate: true }
+        );
+      } catch(e) {
+        console.warn('[Voice] Renegotiation failed with', remoteUid, ':', e.message);
+      }
+    }
+  }
+
   // ── Screen share ───────────────────────────────────────────────────────────
   window.toggleScreenShare = async function() {
     if (screenStream) {
@@ -1677,13 +1671,14 @@
       screenStream.getTracks().forEach(t => t.stop());
       screenStream = null;
 
-      // Remove video senders from all peer connections — triggers onnegotiationneeded renegotiation
+      // Remove video senders from all peer connections then renegotiate
       Object.entries(peerConns).forEach(([uid, pc]) => {
         const sender = pc.getSenders().find(s => s.track?.kind === 'video');
         if (sender) {
           try { pc.removeTrack(sender); } catch(e) {}
         }
       });
+      await renegotiateAll();
 
       document.getElementById('screenshareContainer').classList.remove('active');
       document.getElementById('screenVideo').srcObject = null;
@@ -1711,7 +1706,7 @@
     container.classList.add('active');
     document.getElementById('screenshareLabel').textContent = (currentProfile?.name || 'You') + ' is sharing';
 
-    // Add video track to all peer connections — onnegotiationneeded fires and renegotiates
+    // Add video track to all peer connections, then manually renegotiate
     Object.entries(peerConns).forEach(([uid, pc]) => {
       const existingSender = pc.getSenders().find(s => s.track?.kind === 'video');
       if (existingSender) {
@@ -1720,6 +1715,7 @@
         pc.addTrack(vt, screenStream);
       }
     });
+    await renegotiateAll();
 
     const btn = document.getElementById('shareBtn');
     if (btn) { btn.textContent = '🔴'; btn.classList.add('sharing'); }
